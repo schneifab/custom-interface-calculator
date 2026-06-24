@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schnittstellen-Aufwandskalkulator | SuperOffice</title>
+<style>
+  :root{
+    --primary:#06423e;--primary-soft:#0a5b55;--blue:#b2c7eb;--sand:#f2efea;
+    --plum:#712f4a;--coral:#f48a6d;--ink:#1c2624;--muted:#5e6b68;--line:#d9d4cc;
+    --white:#ffffff;--warn-bg:#fdeee9;--ok-bg:#e7f0ef;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",-apple-system,Arial,sans-serif;color:var(--ink);background:var(--sand);line-height:1.5;font-size:15px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+
+  header{background:var(--primary);color:var(--white);padding:34px 0 30px;margin-bottom:28px}
+  header .wrap{padding-bottom:0}
+  header h1{font-size:26px;font-weight:700;letter-spacing:-.01em}
+  header p{color:var(--blue);margin-top:6px;font-size:14px;max-width:720px}
+  .eyebrow{display:inline-block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--coral);font-weight:700;margin-bottom:10px}
+  .langswitch{position:absolute;top:22px;right:22px;display:flex;border:1px solid rgba(255,255,255,.35);border-radius:8px;overflow:hidden}
+  .langswitch button{background:transparent;border:0;color:rgba(255,255,255,.7);padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.04em}
+  .langswitch button.active{background:#fff;color:var(--primary)}
+  header{position:relative}
+
+  .layout{display:grid;grid-template-columns:1fr 360px;gap:26px;align-items:start}
+  @media(max-width:980px){.layout{grid-template-columns:1fr}}
+
+  .card{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:20px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--primary);font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:9px}
+  .card h2 .num{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .card .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:var(--ink)}
+  .hint{font-weight:400;color:var(--muted);font-size:12px}
+  select,input[type=number],input[type=text]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+  select:focus,input:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--primary)}
+  select:disabled{background:var(--sand);color:var(--muted);cursor:not-allowed}
+
+  .field{margin-bottom:14px}
+  .row{display:grid;gap:14px}
+  .row.r2{grid-template-columns:1fr 1fr}
+  .row.r3{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:560px){.row.r2,.row.r3{grid-template-columns:1fr}}
+
+  .entity{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;background:#fbfaf8}
+  .entity.on{border-color:var(--primary);background:var(--ok-bg)}
+  .entity-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .entity-head .name{font-weight:700;font-size:14px}
+  .entity-body{margin-top:14px;display:none}
+  .entity.on .entity-body{display:block}
+  .ent-section{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+  .ent-section .seclabel{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);font-weight:700;margin-bottom:10px}
+
+  /* Tooltip */
+  .tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--blue);color:var(--primary);font-size:10px;font-weight:700;cursor:help;margin-left:5px;vertical-align:middle;flex:0 0 auto}
+  .tip:hover .tipbox,.tip:focus .tipbox{opacity:1;visibility:visible;transform:translateY(0)}
+  .tipbox{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);width:260px;max-width:76vw;background:var(--ink);color:#fff;font-size:12px;font-weight:400;line-height:1.5;text-align:left;text-transform:none;letter-spacing:normal;padding:10px 12px;border-radius:8px;opacity:0;visibility:hidden;transition:.15s;z-index:30;box-shadow:0 6px 20px rgba(0,0,0,.25);pointer-events:none}
+  .tipbox::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--ink)}
+  .tipbox b{color:var(--blue);font-weight:700}
+  .tipbox .ex{display:block;margin-top:6px;color:#cdd9d7;font-style:italic}
+  .tip.tip-r .tipbox{left:auto;right:-6px;transform:translateX(0) translateY(4px)}
+  .tip.tip-r:hover .tipbox,.tip.tip-r:focus .tipbox{transform:translateX(0) translateY(0)}
+  .tip.tip-r .tipbox::after{left:auto;right:10px;transform:none}
+  @media(max-width:560px){.tipbox{width:200px}}
+
+  .switch{position:relative;display:inline-flex;align-items:center;cursor:pointer;gap:9px;font-size:13px;font-weight:600}
+  .switch input{position:absolute;opacity:0}
+  .track{width:40px;height:22px;background:#c9c3b9;border-radius:20px;transition:.18s;flex:0 0 auto}
+  .knob{position:absolute;left:2px;top:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.18s}
+  .switch input:checked + .track{background:var(--primary)}
+  .switch input:checked + .track + .knob{transform:translateX(18px)}
+
+  .checks{display:flex;flex-wrap:wrap;gap:10px 18px}
+  .check{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;cursor:pointer}
+  .check input{width:16px;height:16px;accent-color:var(--primary);cursor:pointer}
+
+  .sidebar{position:sticky;top:18px}
+  .result{background:var(--primary);color:#fff;border-radius:12px;padding:22px}
+  .result h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);font-weight:700}
+  .big{font-size:46px;font-weight:700;letter-spacing:-.02em;line-height:1;margin:14px 0 2px}
+  .big small{font-size:18px;font-weight:600;color:var(--blue)}
+  .price{font-size:26px;font-weight:700;margin-top:4px}
+  .price small{font-size:13px;color:var(--blue);font-weight:500;display:block;margin-top:2px}
+  .breakdown{margin-top:18px;border-top:1px solid rgba(255,255,255,.18);padding-top:14px}
+  .brk-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:#dfe9e8}
+  .brk-row b{color:#fff;font-weight:600}
+  .brk-row.total{border-top:1px solid rgba(255,255,255,.18);margin-top:6px;padding-top:8px;font-size:15px}
+  .brk-row.total b{color:var(--coral)}
+
+  .pricecfg{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:20px}
+  .pricecfg h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--primary);font-weight:700;margin-bottom:14px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:14px}
+  .seg button{flex:1;border:0;background:#fff;padding:9px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);font-family:inherit}
+  .seg button.active{background:var(--primary);color:#fff}
+
+  .flag{border-radius:10px;padding:13px 15px;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+  .flag .ic{flex:0 0 auto;font-weight:700}
+  .flag.warn{background:var(--warn-bg);border:1px solid var(--coral);color:#7a3320}
+  .flag.warn .ic{color:var(--coral)}
+  .flag.info{background:var(--ok-bg);border:1px solid var(--primary);color:var(--primary)}
+  .flag.plum{background:#f6eaef;border:1px solid var(--plum);color:var(--plum)}
+  .flag.plum .ic{color:var(--plum)}
+  .flag-slot{margin-top:4px}
+  .flag-slot:empty{margin-top:0}
+  .flag-slot .flag{margin-bottom:0}
+  .flag-slot .flag + .flag{margin-top:10px}
+  .flag-slot:not(:empty){margin-top:16px}
+
+  .trig-note{font-size:12px;margin-top:8px;padding:8px 10px;border-radius:7px;background:var(--sand);color:var(--muted);border-left:3px solid var(--blue)}
+  .trig-note.locked{background:var(--ok-bg);border-left-color:var(--primary);color:var(--primary)}
+  .sub-add{display:flex;gap:10px;align-items:flex-end;margin-top:6px}
+  .sub-add .field{flex:1;margin-bottom:0}
+  .btn-add{padding:9px 16px;border-radius:8px;border:1px dashed var(--primary);background:#fff;color:var(--primary);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .btn-add:hover{background:var(--ok-bg)}
+  .sub-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+  .sub-name .tag{font-size:10px;text-transform:uppercase;letter-spacing:.08em;background:var(--blue);color:var(--primary);padding:2px 7px;border-radius:20px;font-weight:700}
+  .btn-del{margin-left:auto;background:none;border:0;color:var(--coral);font-weight:700;cursor:pointer;font-size:18px;line-height:1;padding:0 4px}
+  .empty-note{font-size:13px;color:var(--muted);font-style:italic;padding:6px 0}
+
+  details.adv{margin-top:6px;border-top:1px dashed var(--line);padding-top:14px}
+  details.adv summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--plum);list-style:none}
+  details.adv summary::-webkit-details-marker{display:none}
+  details.adv summary::before{content:"\25B8 ";color:var(--plum)}
+  details.adv[open] summary::before{content:"\25BE "}
+  .rate-grid{display:grid;grid-template-columns:1fr 80px;gap:8px 12px;margin-top:14px;align-items:center}
+  .rate-grid .lbl{font-size:12px;color:var(--muted)}
+  .rate-grid input{padding:6px 8px;font-size:13px;text-align:right}
+  .rate-grid .cat{grid-column:1/-1;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);font-weight:700;margin-top:8px}
+
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .btn{flex:1;padding:11px;border-radius:8px;border:0;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
+  .btn.prompt{flex-basis:100%;background:#fff;border:1px solid var(--coral);color:var(--plum)}
+  .btn.prompt:hover{background:var(--warn-bg)}
+  .btn.print{background:var(--coral);color:#3a1a10}
+  .btn.reset{background:#fff;border:1px solid var(--line);color:var(--muted)}
+  footer{color:var(--muted);font-size:12px;margin-top:30px;text-align:center}
+
+  /* Kalkulationsname oben */
+  .titlecard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 22px;margin-bottom:20px;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+  .titlecard .field{flex:1;min-width:200px;margin-bottom:0}
+
+  /* individuelle Positionen */
+  .custom-row{display:grid;grid-template-columns:1fr 110px 34px;gap:10px;align-items:center;margin-bottom:8px}
+  .custom-row input[type=text]{margin:0}
+  .custom-row .cdel{background:none;border:0;color:var(--coral);font-weight:700;cursor:pointer;font-size:18px;line-height:1}
+  .custom-add{margin-top:6px}
+
+  /* Historie */
+  .hist-empty{font-size:13px;color:var(--muted);font-style:italic;padding:4px 0}
+  .hist-item{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+  .hist-item .meta{flex:1;min-width:0}
+  .hist-item .hname{font-weight:700;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hist-item .hsub{font-size:12px;color:var(--muted)}
+  .hist-item .hbtn{background:#fff;border:1px solid var(--line);color:var(--primary);border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .hist-item .hbtn:hover{background:var(--ok-bg)}
+  .hist-item .hdel{background:none;border:0;color:var(--coral);font-weight:700;cursor:pointer;font-size:16px;line-height:1;padding:0 4px}
+  .hist-note{font-size:11.5px;color:var(--muted);background:var(--sand);border-radius:7px;padding:9px 11px;margin-top:10px;line-height:1.45;border-left:3px solid var(--coral)}
+  .btn.save{flex-basis:100%;background:var(--primary);color:#fff}
+  .btn.save:hover{background:var(--primary-soft)}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(8,30,28,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .modal-bg.open{display:flex}
+  .modal{background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .modal-head{background:var(--primary);color:#fff;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}
+  .modal-head h3{font-size:15px;font-weight:700}
+  .modal-head p{font-size:12px;color:var(--blue);margin-top:3px}
+  .modal-close{background:none;border:0;color:#fff;font-size:24px;cursor:pointer;line-height:1}
+  .modal-body{padding:18px 22px;overflow:auto}
+  #promptText{width:100%;min-height:320px;border:1px solid var(--line);border-radius:8px;padding:14px;font-family:"SF Mono",Consolas,monospace;font-size:12.5px;line-height:1.55;color:var(--ink);resize:vertical;background:var(--sand)}
+  .modal-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;align-items:center}
+  .modal-foot .ok{color:var(--primary);font-size:13px;font-weight:600;margin-right:auto;opacity:0;transition:.2s}
+  .modal-foot .ok.show{opacity:1}
+  .btn-copy{background:var(--primary);color:#fff;border:0;padding:10px 18px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--muted);padding:10px 18px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
+
+  @media print{
+    header{background:#fff !important;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .sidebar{position:static}
+    .actions,.btn,details.adv,.modal-bg{display:none}
+    body{background:#fff}
+    .result{background:var(--primary) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="langswitch">
+    <button data-lang="de" class="active" onclick="setLang('de')">DE</button>
+    <button data-lang="en" onclick="setLang('en')">EN</button>
+  </div>
+  <div class="wrap">
+    <span class="eyebrow" data-i18n="eyebrow">SuperOffice &middot; DACH &middot; Pre-Sales</span>
+    <h1 data-i18n="title">Schnittstellen-Aufwandskalkulator</h1>
+    <p data-i18n="subtitle">Gef&uuml;hrte Aufwandsabsch&auml;tzung f&uuml;r ERP-CRM-Integrationen auf Basis der generischen Konfigurationsbasis. Die Sch&auml;tzung grenzt Scope und Erwartung ein und ersetzt keine verbindliche Spezifikation.</p>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+  <div class="form">
+
+    <!-- Kalkulationsname -->
+    <div class="titlecard">
+      <div class="field">
+        <label><span data-i18n="calcName">Bezeichnung / Kunde</span> <span class="hint" data-i18n="calcName_h">optional &mdash; f&uuml;r das Speichern</span></label>
+        <input type="text" id="calcName" data-i18n-ph="calcName_ph" placeholder="z.B. Mustermann AG &ndash; SAP-Anbindung" maxlength="80">
+      </div>
+    </div>
+
+    <!-- 1 Rahmenbedingungen -->
+    <div class="card" id="gateCard">
+      <h2><span class="num">1</span><span data-i18n="c1_h">Rahmenbedingungen &amp; Machbarkeit</span></h2>
+      <p class="sub" data-i18n="c1_sub">Diese Angaben entscheiden, ob die generische Basis greift oder ob es Richtung Individualentwicklung geht.</p>
+      <div class="row r2">
+        <div class="field">
+          <label data-i18n="erpSystem" data-tip="erpSystem">ERP-System</label>
+          <select id="erpSystem">
+            <option value="SAP S/4HANA">SAP S/4HANA</option>
+            <option value="SAP Business One">SAP Business One</option>
+            <option value="SAP ECC / R/3">SAP ECC / R/3</option>
+            <option value="Microsoft Dynamics 365 Business Central">MS Dynamics 365 Business Central</option>
+            <option value="Microsoft Dynamics 365 Finance &amp; Operations">MS Dynamics 365 F&amp;O</option>
+            <option value="Microsoft Dynamics NAV (Navision)">MS Dynamics NAV (Navision)</option>
+            <option value="Microsoft Dynamics AX">MS Dynamics AX</option>
+            <option value="Sage 100">Sage 100</option>
+            <option value="Sage X3">Sage X3</option>
+            <option value="Abacus">Abacus</option>
+            <option value="ABAS ERP">abas ERP</option>
+            <option value="Infor">Infor</option>
+            <option value="Oracle NetSuite">Oracle NetSuite</option>
+            <option value="Oracle ERP Cloud">Oracle ERP Cloud</option>
+            <option value="proALPHA">proALPHA</option>
+            <option value="APplus">APplus</option>
+            <option value="eNVenta ERP">eNVenta ERP</option>
+            <option value="Odoo">Odoo</option>
+            <option value="weclapp">weclapp</option>
+            <option value="myfactory">myfactory</option>
+            <option value="__other" data-i18n="erp_other_opt">Anderes (frei eintragen) &hellip;</option>
+          </select>
+        </div>
+        <div class="field" id="erpOtherWrap" style="display:none">
+          <label data-i18n="erpOtherLbl">ERP-System (frei)</label>
+          <input type="text" id="erpOther" data-i18n-ph="erpOtherPh" placeholder="Name des ERP-Systems" maxlength="60">
+        </div>
+        <div class="field" id="erpExpWrap">
+          <label data-i18n="erpExp" data-tip="erpExp" class="tip-r-host">Erfahrung mit diesem ERP</label>
+          <select id="erpKnown">
+            <option value="known" data-i18n="erpExp_known">Bekannt / Anbindung existiert</option>
+            <option value="similar" data-i18n="erpExp_similar">&Auml;hnlich zu bestehendem ERP</option>
+            <option value="unknown" data-i18n="erpExp_unknown">Unbekannt / Erstanbindung</option>
+          </select>
+        </div>
+      </div>
+      <div class="row r2">
+        <div class="field">
+          <label data-i18n="connType" data-tip="connType">Anbindungsart ERP-Seite</label>
+          <select id="connType">
+            <option value="rest" data-i18n="conn_rest">REST-Endpunkt vorhanden</option>
+            <option value="file" data-i18n="conn_file">Nur Dateilieferung (XML/CSV)</option>
+            <option value="none" data-i18n="conn_none">Kein &ouml;ffentlicher Endpunkt</option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-i18n="erpDoc" data-tip="erpDoc" class="tip-r-host">ERP-Seite dokumentiert / standardisiert?</label>
+          <select id="erpDoc">
+            <option value="yes" data-i18n="erpDoc_yes">Ja, Feldnamen/Schl&uuml;ssel bekannt</option>
+            <option value="partial" data-i18n="erpDoc_partial">Teilweise</option>
+            <option value="no" data-i18n="erpDoc_no">Nein, muss erhoben werden</option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-i18n="soVariant">SuperOffice-Variante</label>
+          <select id="soVariant">
+            <option value="cloud" data-i18n="so_cloud">Cloud / Online</option>
+            <option value="onsite" data-i18n="so_onsite">On-Site</option>
+          </select>
+        </div>
+      </div>
+      <div class="row r2">
+        <div class="field" style="margin-bottom:0">
+          <label data-i18n="auth" data-tip="auth" class="tip-r-host">Authentifizierung gegen ERP-API</label>
+          <select id="auth">
+            <option value="apikey" data-i18n="auth_apikey">API-Key / Basic</option>
+            <option value="oauth">OAuth 2.0</option>
+            <option value="cert" data-i18n="auth_cert">Zertifikat / mTLS</option>
+            <option value="unknown" data-i18n="auth_unknown">Noch offen / unbekannt</option>
+            <option value="na" data-i18n="auth_na">Nicht zutreffend (kein API-Zugriff)</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0"></div>
+      </div>
+      <div class="flag-slot" id="slot-gate"></div>
+    </div>
+
+    <!-- 2 Entitäten -->
+    <div class="card">
+      <h2><span class="num">2</span><span data-i18n="c2_h">Entit&auml;ten, Richtung &amp; Aufbereitung</span></h2>
+      <p class="sub" data-i18n="c2_sub">Pro aktivierter Entit&auml;t: Richtung, &Uuml;bermittlung, Feldzahl sowie der Aufbereitungsaufwand (Mapping/Transform/Sonderregeln) der zugeh&ouml;rigen Felder. Bidirektional ist &uuml;berproportional gewichtet und zwingend getriggert.</p>
+      <div id="entities"></div>
+      <div class="flag-slot" id="slot-noentity"></div>
+
+      <div style="margin-top:18px;border-top:1px dashed var(--line);padding-top:16px">
+        <label><span data-i18n="subtables">Zusatztabellen</span> <span class="hint" data-i18n="subtables_hint">beliebig viele, je mit eigener Entit&auml;t/Bezeichnung</span></label>
+        <div id="subtables"></div>
+        <div class="sub-add">
+          <div class="field">
+            <input type="text" id="newSubName" data-i18n-ph="subtables_ph" placeholder="z.B. Maschinen, Alternativangebote, Verk&auml;ufer-Codes &hellip;" maxlength="60">
+          </div>
+          <button class="btn-add" type="button" onclick="addSubtable()" data-i18n="subtables_add">+ Zusatztabelle</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Prozesse & Betrieb -->
+    <div class="card">
+      <h2><span class="num">3</span><span data-i18n="c3_h">Prozesse &amp; Betrieb</span></h2>
+      <p class="sub" data-i18n="c3_sub">Feste Bausteine, unabh&auml;ngig von der Feldzahl.</p>
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="pOnboard" checked> <span data-i18n="pOnboard" data-tip="pOnboard">Firmen-Onboarding (Push &rarr; ERP-Nr. &rarr; Verlinkung)</span></label>
+        <label class="check"><input type="checkbox" id="pLock"> <span data-i18n="pLock" data-tip="pLock">Feldsperre / Schreibschutz (Redo)</span></label>
+        <label class="check"><input type="checkbox" id="pRights"> <span data-i18n="pRights" data-tip="pRights">Rechtekonzept-Bruch (z.B. mehrere Verk&auml;ufer-Codes)</span></label>
+        <label class="check"><input type="checkbox" id="pMonitor"> <span data-i18n="pMonitor" data-tip="pMonitor">Fehlerbehandlung &amp; Monitoring</span></label>
+      </div>
+      <div class="row r2" style="margin-top:16px">
+        <div class="field" style="margin-bottom:0">
+          <label data-i18n="deleteMode" data-tip="deleteMode">L&ouml;schverhalten</label>
+          <select id="deleteMode">
+            <option value="none" data-i18n="del_none">L&ouml;schungen nicht synchronisieren</option>
+            <option value="soft" data-i18n="del_soft">Soft-Delete / Markierung</option>
+            <option value="hard" data-i18n="del_hard">L&ouml;schungen synchronisieren</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label data-i18n="migrate" data-tip="migrate" class="tip-r-host">Initiale Datenmigration</label>
+          <select id="migrate">
+            <option value="none" data-i18n="mig_none">Keine</option>
+            <option value="small" data-i18n="mig_small">Klein (&lt; 5.000 Datens&auml;tze)</option>
+            <option value="medium" data-i18n="mig_medium">Mittel (5.000&ndash;50.000)</option>
+            <option value="large" data-i18n="mig_large">Gro&szlig; (&gt; 50.000)</option>
+          </select>
+        </div>
+      </div>
+      <div class="flag-slot" id="slot-process"></div>
+    </div>
+
+    <!-- 4 Aufschläge -->
+    <div class="card">
+      <h2><span class="num">4</span><span data-i18n="c4_h">Workshop, Doku, Test &amp; Projektleitung</span></h2>
+      <p class="sub" data-i18n="c4_sub">Nicht-Entwicklungsaufwand. Workshop als fixer Sockel plus Anteil je Entit&auml;t; Test prozentual auf Entwicklung; PL und Risiko prozentual auf die Zwischensumme.</p>
+      <div class="row r2">
+        <div class="field">
+          <label><span data-i18n="aWorkshopBase">Workshop &amp; Spezifikation</span> <span class="hint" data-i18n="aWorkshopBase_h">Sockel in Tagen</span></label>
+          <input type="number" id="aWorkshopBase" min="0" step="0.5" value="1">
+        </div>
+        <div class="field">
+          <label><span data-i18n="aWorkshopPer">&hellip; zzgl. je aktiver Entit&auml;t</span> <span class="hint" data-i18n="aWorkshopPer_h">Tage</span></label>
+          <input type="number" id="aWorkshopPer" min="0" step="0.25" value="0.5">
+        </div>
+      </div>
+      <div class="row r2">
+        <div class="field">
+          <label><span data-i18n="aTest">Test &amp; Abnahme (UAT)</span> <span class="hint" data-i18n="aTest_h">% auf Entwicklung</span></label>
+          <input type="number" id="aTest" min="0" value="20">
+        </div>
+        <div class="field">
+          <label><span data-i18n="aPM">Projektleitung / Koordination</span> <span class="hint" data-i18n="aPM_h">% auf Zwischensumme</span></label>
+          <input type="number" id="aPM" min="0" value="12">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label><span data-i18n="aRisk">Risiko-/Unsicherheitspuffer</span> <span class="hint" data-i18n="aRisk_h">% auf Zwischensumme &mdash; intern, nicht im Kundenangebot ausweisen</span></label>
+        <input type="number" id="aRisk" min="0" value="10">
+      </div>
+    </div>
+
+    <!-- 5 Individuelle Positionen -->
+    <div class="card">
+      <h2><span class="num">5</span><span data-i18n="c5_h">Individuelle Zusatzpositionen</span></h2>
+      <p class="sub" data-i18n="c5_sub">F&uuml;r Leistungen, die der Kalkulator nicht strukturiert abbildet. Jede Position flie&szlig;t mit ihrem Aufwand in die Summe und in den generierten Prompt ein, damit die Sch&auml;tzung vollst&auml;ndig bleibt. Sparsam einsetzen &mdash; was strukturiert erfassbar ist, geh&ouml;rt in die Bl&ouml;cke oben.</p>
+      <div id="customRows"></div>
+      <button class="btn-add custom-add" type="button" onclick="addCustom()" data-i18n="c5_add">+ Position hinzuf&uuml;gen</button>
+    </div>
+
+  </div>
+
+  <!-- RESULT -->
+  <div class="sidebar">
+
+    <div class="pricecfg">
+      <h2 data-i18n="price_h">Preis &amp; Konditionen</h2>
+      <div class="seg" id="curSeg">
+        <button data-cur="CHF" class="active">CHF</button>
+        <button data-cur="EUR">EUR</button>
+      </div>
+      <div class="field">
+        <label><span data-i18n="rate">Tagessatz</span> <span class="hint" id="rateHint">Standard CHF</span></label>
+        <input type="number" id="rate" min="0" value="1800">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label><span data-i18n="discount">Rabatt</span> <span class="hint" data-i18n="discount_h">% auf Gesamtpreis</span></label>
+        <input type="number" id="discount" min="0" max="100" value="0">
+      </div>
+    </div>
+
+    <div class="result" id="result">
+      <h2 data-i18n="result_h">Gesch&auml;tzter Aufwand</h2>
+      <div class="big"><span id="days">0</span><small data-i18n="days_unit"> Tage</small></div>
+      <div class="price"><span id="priceVal">0</span> <span id="priceCur">CHF</span>
+        <small id="priceNote">Listenpreis ohne Rabatt</small>
+      </div>
+      <div class="breakdown" id="breakdown"></div>
+      <div class="actions">
+        <button class="btn save" onclick="saveCalc()" data-i18n="btn_save">Kalkulation speichern</button>
+        <button class="btn prompt" onclick="openPrompt()" data-i18n="btn_prompt">Prompt erzeugen</button>
+        <button class="btn print" onclick="window.print()" data-i18n="btn_print">Drucken / PDF</button>
+        <button class="btn reset" onclick="resetAll()" data-i18n="btn_reset">Zur&uuml;cksetzen</button>
+      </div>
+    </div>
+
+    <div class="pricecfg" id="histCard" style="margin-top:20px">
+      <h2 data-i18n="hist_h">Gespeicherte Kalkulationen</h2>
+      <div id="histList"></div>
+      <div class="hist-note" data-i18n="hist_note">Hinweis: Gespeicherte Kalkulationen liegen nur lokal in diesem Browser (localStorage). Bei Browser- oder Ger&auml;tewechsel sowie beim L&ouml;schen der Browserdaten gehen sie verloren. Kein Cloud-Backup.</div>
+    </div>
+
+    <details class="adv">
+      <summary data-i18n="calib">Aufwandswerte anpassen (Kalibrierung)</summary>
+      <div class="rate-grid" id="weights"></div>
+    </details>
+
+  </div>
+
+</div>
+<footer data-i18n="footer">Interne Pre-Sales-Sch&auml;tzung &middot; Basis: generische Konfigurationsschnittstelle &middot; Werte sind kalibrierbar und ersetzen keine verbindliche Spezifikation.</footer>
+</div>
+
+<div class="modal-bg" id="promptModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 data-i18n="modal_h">Prompt-Vorlage</h3>
+        <p data-i18n="modal_sub">Aus der aktuellen Konfiguration generiert &mdash; als Eingabe f&uuml;r die Erstellung der Schnittstellenbeschreibung.</p>
+      </div>
+      <button class="modal-close" onclick="closePrompt()" aria-label="Schlie&szlig;en">&times;</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="promptText" spellcheck="false"></textarea>
+    </div>
+    <div class="modal-foot">
+      <span class="ok" id="copyOk" data-i18n="copyOk">In Zwischenablage kopiert</span>
+      <button class="btn-ghost" onclick="closePrompt()" data-i18n="modal_close">Schlie&szlig;en</button>
+      <button class="btn-copy" onclick="copyPrompt()" data-i18n="modal_copy">Kopieren</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== i18n ===== */
+let LANG='de';
+const T={
+de:{
+  eyebrow:'SuperOffice \u00b7 DACH \u00b7 Pre-Sales',
+  title:'Schnittstellen-Aufwandskalkulator',
+  subtitle:'Gef\u00fchrte Aufwandsabsch\u00e4tzung f\u00fcr ERP-CRM-Integrationen auf Basis der generischen Konfigurationsbasis. Die Sch\u00e4tzung grenzt Scope und Erwartung ein und ersetzt keine verbindliche Spezifikation.',
+  calcName:'Bezeichnung / Kunde', calcName_h:'optional \u2014 f\u00fcr das Speichern', calcName_ph:'z.B. Mustermann AG \u2013 SAP-Anbindung',
+  c1_h:'Rahmenbedingungen & Machbarkeit', c1_sub:'Diese Angaben entscheiden, ob die generische Basis greift oder ob es Richtung Individualentwicklung geht.',
+  erpSystem:'ERP-System', erp_other_opt:'Anderes (frei eintragen) \u2026', erpOtherLbl:'ERP-System (frei)', erpOtherPh:'Name des ERP-Systems',
+  erpExp:'Erfahrung mit diesem ERP', erpExp_known:'Bekannt / Anbindung existiert', erpExp_similar:'\u00c4hnlich zu bestehendem ERP', erpExp_unknown:'Unbekannt / Erstanbindung',
+  connType:'Anbindungsart ERP-Seite', conn_rest:'REST-Endpunkt vorhanden', conn_file:'Nur Dateilieferung (XML/CSV)', conn_none:'Kein \u00f6ffentlicher Endpunkt',
+  erpDoc:'ERP-Seite dokumentiert / standardisiert?', erpDoc_yes:'Ja, Feldnamen/Schl\u00fcssel bekannt', erpDoc_partial:'Teilweise', erpDoc_no:'Nein, muss erhoben werden',
+  soVariant:'SuperOffice-Variante', so_cloud:'Cloud / Online', so_onsite:'On-Site',
+  auth:'Authentifizierung gegen ERP-API', auth_apikey:'API-Key / Basic', auth_cert:'Zertifikat / mTLS', auth_unknown:'Noch offen / unbekannt', auth_na:'Nicht zutreffend (kein API-Zugriff)',
+  c2_h:'Entit\u00e4ten, Richtung & Aufbereitung', c2_sub:'Pro aktivierter Entit\u00e4t: Richtung, \u00dcbermittlung, Feldzahl sowie der Aufbereitungsaufwand (Mapping/Transform/Sonderregeln) der zugeh\u00f6rigen Felder. Bidirektional ist \u00fcberproportional gewichtet und zwingend getriggert.',
+  subtables:'Zusatztabellen', subtables_hint:'beliebig viele, je mit eigener Entit\u00e4t/Bezeichnung', subtables_ph:'z.B. Maschinen, Alternativangebote, Verk\u00e4ufer-Codes \u2026', subtables_add:'+ Zusatztabelle', subtables_empty:'Noch keine Zusatztabelle erg\u00e4nzt.',
+  c3_h:'Prozesse & Betrieb', c3_sub:'Feste Bausteine, unabh\u00e4ngig von der Feldzahl.',
+  pOnboard:'Firmen-Onboarding (Push \u2192 ERP-Nr. \u2192 Verlinkung)', pLock:'Feldsperre / Schreibschutz (Redo)', pRights:'Rechtekonzept-Bruch (z.B. mehrere Verk\u00e4ufer-Codes)', pMonitor:'Fehlerbehandlung & Monitoring',
+  deleteMode:'L\u00f6schverhalten', del_none:'L\u00f6schungen nicht synchronisieren', del_soft:'Soft-Delete / Markierung', del_hard:'L\u00f6schungen synchronisieren',
+  migrate:'Initiale Datenmigration', mig_none:'Keine', mig_small:'Klein (< 5.000 Datens\u00e4tze)', mig_medium:'Mittel (5.000\u201350.000)', mig_large:'Gro\u00df (> 50.000)',
+  c4_h:'Workshop, Doku, Test & Projektleitung', c4_sub:'Nicht-Entwicklungsaufwand. Workshop als fixer Sockel plus Anteil je Entit\u00e4t; Test prozentual auf Entwicklung; PL und Risiko prozentual auf die Zwischensumme.',
+  aWorkshopBase:'Workshop & Spezifikation', aWorkshopBase_h:'Sockel in Tagen', aWorkshopPer:'\u2026 zzgl. je aktiver Entit\u00e4t', aWorkshopPer_h:'Tage',
+  aTest:'Test & Abnahme (UAT)', aTest_h:'% auf Entwicklung', aPM:'Projektleitung / Koordination', aPM_h:'% auf Zwischensumme', aRisk:'Risiko-/Unsicherheitspuffer', aRisk_h:'% auf Zwischensumme \u2014 intern, nicht im Kundenangebot ausweisen',
+  c5_h:'Individuelle Zusatzpositionen', c5_sub:'F\u00fcr Leistungen, die der Kalkulator nicht strukturiert abbildet. Jede Position flie\u00dft mit ihrem Aufwand in die Summe und in den generierten Prompt ein, damit die Sch\u00e4tzung vollst\u00e4ndig bleibt. Sparsam einsetzen \u2014 was strukturiert erfassbar ist, geh\u00f6rt in die Bl\u00f6cke oben.', c5_add:'+ Position hinzuf\u00fcgen', c5_descPh:'Beschreibung der Leistung', c5_daysPh:'Tage',
+  price_h:'Preis & Konditionen', rate:'Tagessatz', rateStd:'Standard ', discount:'Rabatt', discount_h:'% auf Gesamtpreis',
+  result_h:'Gesch\u00e4tzter Aufwand', days_unit:' Tage',
+  priceNoteList:(r,c)=>fmt(r)+' '+c+'/Tag \u00b7 Listenpreis', priceNoteDisc:(g,c,d)=>'Listenpreis '+fmt(g)+' '+c+' \u00b7 '+d+'% Rabatt',
+  btn_save:'Kalkulation speichern', btn_prompt:'Prompt erzeugen', btn_print:'Drucken / PDF', btn_reset:'Zur\u00fccksetzen',
+  hist_h:'Gespeicherte Kalkulationen', hist_note:'Hinweis: Gespeicherte Kalkulationen liegen nur lokal in diesem Browser (localStorage). Bei Browser- oder Ger\u00e4tewechsel sowie beim L\u00f6schen der Browserdaten gehen sie verloren. Kein Cloud-Backup.', hist_empty:'Noch keine Kalkulation gespeichert.', hist_load:'Laden', hist_unnamed:'Unbenannt', hist_days:'Tage',
+  calib:'Aufwandswerte anpassen (Kalibrierung)',
+  footer:'Interne Pre-Sales-Sch\u00e4tzung \u00b7 Basis: generische Konfigurationsschnittstelle \u00b7 Werte sind kalibrierbar und ersetzen keine verbindliche Spezifikation.',
+  modal_h:'Prompt-Vorlage', modal_sub:'Aus der aktuellen Konfiguration generiert \u2014 als Eingabe f\u00fcr die Erstellung der Schnittstellenbeschreibung.', copyOk:'In Zwischenablage kopiert', modal_close:'Schlie\u00dfen', modal_copy:'Kopieren',
+  saveFail:'Speichern fehlgeschlagen: Browser-Speicher nicht verf\u00fcgbar oder voll.',
+  // Breakdown
+  bd_dev:'Entwicklungsaufwand', bd_custom:'davon Zusatzpositionen', bd_ws:'+ Workshop/Spez.', bd_test:'+ Test/Abnahme', bd_pm:'+ Projektleitung', bd_risk:'+ Risikopuffer', bd_total:'Gesamt',
+  // Entity UI
+  e_dir:'Richtung', e_dir_erp:'ERP \u2192 SuperOffice', e_dir_so:'SuperOffice \u2192 ERP', e_dir_bi:'Bidirektional',
+  e_fields:'Anzahl Felder', e_trig:'\u00dcbermittlung', e_trig_webhook:'Getriggert (Webhook nach Speichern)', e_trig_delta:'Zeitgesteuert (Delta, z.B. st\u00fcndlich)',
+  e_key:'Matching-Schl\u00fcssel', e_key_clean:'Eindeutiger Schl\u00fcssel', e_key_multi:'Mehrdeutig / kombiniert', e_key_none:'Kein stabiler Schl\u00fcssel',
+  e_erp:'Entsprechung im ERP', e_udef:'\u00fcberwiegend benutzerdefinierte Felder',
+  e_prep:'Feldaufbereitung (Teilmenge der o.g. Felder)', e_map:'Code-/Listen-Mapping', e_tr:'Transform', e_ru:'Sonderregeln', e_fieldsword:'Felder',
+  e_risk_h:'Komplexit\u00e4t', e_risk_h2:'(erh\u00f6htes Risiko)', e_risk_pos:'Positionen (nicht nur Kopfdaten)', e_risk_version:'Versionierung', e_risk_multiorder:'Mehrere Auftr\u00e4ge pro Angebot', e_risk_variants:'Varianten / Alternativ- / Optionalpos.', e_risk_calc:'Mengen-/Preis-/Rabattlogik',
+  e_tag:'Zusatztab.',
+  trignote_bi:'Bidirektional: \u00dcbermittlung muss direkt getriggert werden (Webhook). Delta/zeitgesteuert ist hier nicht zul\u00e4ssig.',
+  trignote_delta:'Delta/zeitgesteuert: \u00dcbertr\u00e4gt periodisch die ge\u00e4nderten Datens\u00e4tze (z.B. der letzten Stunde). Nur f\u00fcr unidirektionale Schnittstellen geeignet.',
+  trignote_webhook:'Getriggert: Webhook nach dem Speichern in SuperOffice st\u00f6\u00dft den Export an. Sinnvoll bei vorhandenem REST-Endpunkt.',
+  ENTNAMES:{firma:'Firma', person:'Person', angebot:'Angebot / Verkauf', auftrag:'Auftrag'},
+  fl_erpUnknown:'ERP unbekannt: Discovery-Phase einplanen, Sch\u00e4tzung mit erh\u00f6hter Unsicherheit.',
+  fl_connFile:'Dateibasierte Anbindung (XML/CSV): Hierf\u00fcr sollte DataBridge eingesetzt werden. Dieser Kalkulator (f\u00fcr die REST-basierte generische Schnittstelle) ist dann nicht mehr zwingend geeignet \u2014 die Sch\u00e4tzung dient nur als grobe Orientierung.',
+  fl_connNone:'Kein \u00f6ffentlicher Endpunkt vorhanden: Zuerst gemeinsam mit dem Kunden bzw. dessen ERP-Anbieter die Machbarkeit abkl\u00e4ren, bevor eine belastbare Aufwandssch\u00e4tzung m\u00f6glich ist.',
+  fl_onsite:'On-Site: Pr\u00fcfen, ob die rein digitale REST-Variante nutzbar ist oder ob On-Site-Komponenten n\u00f6tig werden.',
+  fl_authUnknown:'Authentifizierungsverfahren noch offen: Mit dem ERP-Anbieter kl\u00e4ren (API-Key, OAuth, Zertifikat) \u2014 beeinflusst Aufwand und Machbarkeit.',
+  fl_personBi:'Person bidirektional gew\u00e4hlt: In den meisten Projekten nicht n\u00f6tig. Unidirektional empfohlen, spart Aufwand und vermeidet Begehrlichkeiten.',
+  fl_quoteBi:'%s bidirektional: Angebotserstellung verbleibt meist im ERP. Bidirektional nur bei klarem Bedarf vorsehen.',
+  fl_conflict:'%s: Bei bidirektionaler Synchronisation ist die Konfliktbehandlung festzulegen (z.B. ERP gewinnt, oder j\u00fcngster Zeitstempel). Standard: ERP-Master.',
+  fl_noKey:'%s: Kein stabiler Matching-Schl\u00fcssel \u2014 Dublettenrisiko, manuelle Verkn\u00fcpfungslogik n\u00f6tig. Vorab kl\u00e4ren, woran Datens\u00e4tze eindeutig erkannt werden.',
+  fl_webhookNoRest:'%s: Getriggerte \u00dcbermittlung (Webhook) setzt einen erreichbaren ERP-Endpunkt voraus. Anbindungsart pr\u00fcfen.',
+  fl_riskMulti:'%s: Mehrere Komplexit\u00e4tsfaktoren aktiv (Positionen, Varianten etc.). Hier greift kein Standardwert \u2014 verbindlich erst nach Detail-Workshop, der Wert ist eine Untergrenze.',
+  fl_noEntity:'Noch keine Entit\u00e4t aktiviert. Mindestens eine Entit\u00e4t w\u00e4hlen, um eine Sch\u00e4tzung zu erhalten.',
+  fl_rights:'Rechtekonzept-Bruch (z.B. mehrere Verk\u00e4ufer-Codes je Person): Hebelt das SuperOffice-Standardkonzept aus. Als Individualleistung f\u00fchren.',
+  fl_delHard:'L\u00f6schungen werden synchronisiert: Kl\u00e4ren, ob harte L\u00f6schung im Zielsystem gew\u00fcnscht ist oder Archivierung/Deaktivierung sicherer w\u00e4re.',
+  fl_migLarge:'Gro\u00dfes Migrationsvolumen: Performance, Drosselung (Rate-Limits) und Laufzeitfenster der Erstbef\u00fcllung ber\u00fccksichtigen.',
+  tips:{
+    erpSystem:{t:'Welches ERP wird angebunden?',e:'G\u00e4ngige Systeme zur Auswahl; bei abweichendem System \u201eAnderes\u201c w\u00e4hlen und frei eintragen. Fliesst in den generierten Prompt ein.'},
+    erpExp:{t:'Wie viel Erfahrung besteht mit diesem ERP?',e:'Bekannt: bereits angebunden, Felder/Endpunkte erprobt. \u00c4hnlich: vergleichbares System bekannt. Unbekannt: Erstanbindung, Analysephase n\u00f6tig.'},
+    connType:{t:'Wie kommt SuperOffice an die ERP-Daten?',e:'REST: Live-Schnittstelle (bevorzugt). Datei: ERP exportiert XML/CSV (eher DataBridge). Kein Endpunkt: ERP ist nicht von au\u00dfen erreichbar.'},
+    erpDoc:{t:'Sind Felder, Endpunkte und Schl\u00fcssel der ERP-Seite bekannt?',e:'Ja: Doku/Swagger vorhanden. Teilweise: nur grob bekannt. Nein: muss erst durch Analyse erhoben werden (Discovery-Aufwand).'},
+    auth:{t:'Wie meldet sich die Schnittstelle am ERP an?',e:'API-Key/Basic: einfacher Schl\u00fcssel im Header. OAuth 2.0: Token-Flow, etwas mehr Aufwand. Zertifikat/mTLS: gegenseitige Zertifikatspr\u00fcfung, h\u00f6chster Aufwand. \u201eOffen\u201c w\u00e4hlen, wenn noch ungekl\u00e4rt.'},
+    pOnboard:{t:'Standardprozess f\u00fcr neue Firmen.',e:'Neue Firma ohne ERP-Nummer wird ans ERP gepusht; kommt eine ERP-Nummer zur\u00fcck, wird verlinkt, sonst bleibt sie nur im CRM.'},
+    pLock:{t:'Schutz ERP-gef\u00fchrter Felder im CRM.',e:'Nach Verlinkung werden vom ERP gepflegte Felder in SuperOffice schreibgesch\u00fctzt, damit sie nicht manuell \u00fcberschrieben werden.'},
+    pRights:{t:'Konstellationen, die das SuperOffice-Standardmodell aushebeln.',e:'Z.B. ein Verantwortlicher hat im ERP mehrere Verk\u00e4ufer-Codes, w\u00e4hrend eine Firma im CRM nur einen Eigner hat. Erfordert Individuallogik.'},
+    pMonitor:{t:'Verhalten bei fehlgeschlagenen \u00dcbertragungen.',e:'Protokollierung, automatischer Wiederanlauf (Retry), Benachrichtigung bei dauerhaft fehlerhaften Datens\u00e4tzen statt stillem Verwerfen.'},
+    deleteMode:{t:'Was passiert, wenn ein Datensatz in der Quelle gel\u00f6scht wird?',e:'Nicht synchronisieren: L\u00f6schungen werden ignoriert (sicherste Variante). Soft-Delete: Markierung als inaktiv. Synchronisieren: Datensatz wird auch im Ziel gel\u00f6scht (Vorsicht bei Verkn\u00fcpfungen).'},
+    migrate:{t:'Einmalige Erstbef\u00fcllung des Zielsystems beim Go-Live.',e:'Volumen bestimmt Aufwand und Laufzeit. Bei gro\u00dfen Mengen sind Rate-Limits und Zeitfenster zu beachten. Unabh\u00e4ngig vom laufenden Delta-/Webhook-Betrieb.'},
+    e_dir:{t:'In welche Richtung wird synchronisiert?',e:'ERP \u2192 SuperOffice: ERP ist f\u00fchrend (z.B. Stammdaten). SuperOffice \u2192 ERP: CRM ist f\u00fchrend (z.B. neue Interessenten). Bidirektional: beide Seiten schreiben \u2013 erfordert Konfliktregeln.'},
+    e_fields:{t:'Wie viele Felder dieser Entit\u00e4t werden synchronisiert?',e:'Nur die tats\u00e4chlich abzugleichenden Felder z\u00e4hlen (z.B. Firma: Name, Adresse, USt-ID, Branche \u2026), nicht alle vorhandenen.'},
+    e_trig:{t:'Wann werden Daten \u00fcbertragen?',e:'Getriggert: sofort beim Speichern via Webhook (aktuell, ben\u00f6tigt Endpunkt). Zeitgesteuert: periodisch werden nur ge\u00e4nderte Datens\u00e4tze (Delta) gesendet \u2013 nur unidirektional m\u00f6glich.'},
+    e_key:{t:'Woran wird ein Datensatz beidseitig eindeutig wiedererkannt?',e:'Eindeutig: ein stabiler Schl\u00fcssel pro Seite (Firma \u2192 ERP-Nummer, Person \u2192 E-Mail, Angebot \u2192 Angebotsnummer). Mehrdeutig: nur Kombination (Name+Ort) oder mehrere m\u00f6gliche Schl\u00fcssel. Keiner: kein verl\u00e4sslicher Schl\u00fcssel \u2013 Dublettenrisiko.'},
+    e_udef:{t:'Sind es vorwiegend Zusatzfelder (UDEF) statt Standardfelder?',e:'Benutzerdefinierte Felder erh\u00f6hen Mapping- und Testaufwand, da sie kundenindividuell sind und kein Standardverhalten haben.'},
+    e_map:{t:'Felder, deren Werte zwischen den Systemen \u00fcbersetzt werden m\u00fcssen.',e:'Beispiele: Anrede 1/2 \u2192 Herr/Frau, L\u00e4ndercode CH/CHE \u2192 Schweiz, Branchen-/Statuscodes, W\u00e4hrungsk\u00fcrzel. Z\u00e4hle die Felder mit fester Wertliste, die nicht 1:1 \u00fcbereinstimmt.'},
+    e_tr:{t:'Felder, deren Wert vor dem Schreiben umgerechnet/umformatiert wird.',e:'Beispiele: Datum TT.MM.JJJJ \u2192 ISO, Vor-+Nachname zusammenf\u00fchren, Telefon normalisieren, Betrag \u00d7 Faktor, Gro\u00df-/Kleinschreibung. Z\u00e4hle Felder, die nicht unver\u00e4ndert \u00fcbernommen werden.'},
+    e_ru:{t:'Felder mit bedingter Logik beim Schreiben.',e:'Beispiele: nicht \u00fcberschreiben, wenn bereits gef\u00fcllt; Defaultwert bei Leerwert setzen; nur schreiben, wenn Status = aktiv; Feld ignorieren, wenn Quelle leer. Z\u00e4hle Felder mit solcher Wenn-Dann-Logik.'},
+    e_risk:{t:'Diese Faktoren machen Angebot/Auftrag schwer standardisierbar.',e:'Positionen statt nur Kopfdaten; mehrere Angebotsversionen; mehrere Auftr\u00e4ge je Angebot; Varianten/Alternativpos. (in SuperOffice kein echtes \u00c4quivalent); Mengen-/Preis-/Rabattberechnung. Ab zwei Faktoren: Individualsch\u00e4tzung.'},
+    e_erp:{firma:'z.B. Debitor. Falls mehrere: \u201eDebitor, Kreditor\u201c (eine CRM-Entit\u00e4t \u2194 mehrere ERP-Entit\u00e4ten).',person:'z.B. Ansprechpartner / Kontakt.',angebot:'z.B. Angebot / Auftragskopf.',auftrag:'z.B. Auftrag / Beleg.',sub:'Freitext, ggf. mehrere kommagetrennt.', title:'Wie hei\u00dft diese Entit\u00e4t im ERP?', tail:'Mehrere Pendants kommagetrennt eintragen.'},
+    e_erpph:{firma:'z.B. Debitor (ggf. Debitor, Kreditor)',person:'z.B. Ansprechpartner',angebot:'z.B. Angebot',auftrag:'z.B. Auftrag',sub:'ERP-Entit\u00e4t(en)'}
+  }
+},
+en:{
+  eyebrow:'SuperOffice \u00b7 DACH \u00b7 Pre-Sales',
+  title:'Integration Effort Calculator',
+  subtitle:'Guided effort estimate for ERP-CRM integrations based on the generic configuration base. The estimate scopes the work and sets expectations; it is not a binding specification.',
+  calcName:'Label / customer', calcName_h:'optional \u2014 used for saving', calcName_ph:'e.g. Acme Corp \u2013 SAP integration',
+  c1_h:'Context & feasibility', c1_sub:'These inputs decide whether the generic base applies or whether it tends towards custom development.',
+  erpSystem:'ERP system', erp_other_opt:'Other (enter manually) \u2026', erpOtherLbl:'ERP system (free text)', erpOtherPh:'Name of the ERP system',
+  erpExp:'Experience with this ERP', erpExp_known:'Known / integration exists', erpExp_similar:'Similar to a known ERP', erpExp_unknown:'Unknown / first integration',
+  connType:'ERP-side connection type', conn_rest:'REST endpoint available', conn_file:'File delivery only (XML/CSV)', conn_none:'No public endpoint',
+  erpDoc:'ERP side documented / standardised?', erpDoc_yes:'Yes, field names/keys known', erpDoc_partial:'Partially', erpDoc_no:'No, needs to be discovered',
+  soVariant:'SuperOffice edition', so_cloud:'Cloud / Online', so_onsite:'On-Site',
+  auth:'Authentication against ERP API', auth_apikey:'API key / Basic', auth_cert:'Certificate / mTLS', auth_unknown:'Open / unknown', auth_na:'Not applicable (no API access)',
+  c2_h:'Entities, direction & preparation', c2_sub:'Per active entity: direction, delivery, field count and the preparation effort (mapping/transform/special rules) of the related fields. Bidirectional is weighted disproportionately and is always triggered.',
+  subtables:'Additional tables', subtables_hint:'any number, each with its own entity/label', subtables_ph:'e.g. machines, alternative quotes, salesperson codes \u2026', subtables_add:'+ Additional table', subtables_empty:'No additional table added yet.',
+  c3_h:'Processes & operation', c3_sub:'Fixed building blocks, independent of field count.',
+  pOnboard:'Company onboarding (push \u2192 ERP no. \u2192 link)', pLock:'Field lock / write protection (redo)', pRights:'Permission-model break (e.g. multiple salesperson codes)', pMonitor:'Error handling & monitoring',
+  deleteMode:'Deletion behaviour', del_none:'Do not synchronise deletions', del_soft:'Soft delete / flag', del_hard:'Synchronise deletions',
+  migrate:'Initial data migration', mig_none:'None', mig_small:'Small (< 5,000 records)', mig_medium:'Medium (5,000\u201350,000)', mig_large:'Large (> 50,000)',
+  c4_h:'Workshop, docs, testing & PM', c4_sub:'Non-development effort. Workshop as a fixed base plus a share per entity; testing as a percentage of development; PM and risk as a percentage of the subtotal.',
+  aWorkshopBase:'Workshop & specification', aWorkshopBase_h:'base in days', aWorkshopPer:'\u2026 plus per active entity', aWorkshopPer_h:'days',
+  aTest:'Test & acceptance (UAT)', aTest_h:'% of development', aPM:'Project management / coordination', aPM_h:'% of subtotal', aRisk:'Risk / uncertainty buffer', aRisk_h:'% of subtotal \u2014 internal, do not show in the customer quote',
+  c5_h:'Individual additional items', c5_sub:'For services the calculator does not capture in a structured way. Each item is added with its effort to the total and to the generated prompt so the estimate stays complete. Use sparingly \u2014 anything that can be captured in a structured way belongs in the blocks above.', c5_add:'+ Add item', c5_descPh:'Description of the service', c5_daysPh:'Days',
+  price_h:'Price & terms', rate:'Day rate', rateStd:'Default ', discount:'Discount', discount_h:'% on total price',
+  result_h:'Estimated effort', days_unit:' days',
+  priceNoteList:(r,c)=>fmt(r)+' '+c+'/day \u00b7 list price', priceNoteDisc:(g,c,d)=>'List price '+fmt(g)+' '+c+' \u00b7 '+d+'% discount',
+  btn_save:'Save calculation', btn_prompt:'Generate prompt', btn_print:'Print / PDF', btn_reset:'Reset',
+  hist_h:'Saved calculations', hist_note:'Note: saved calculations are stored only locally in this browser (localStorage). They are lost when switching browser or device, or when clearing browsing data. No cloud backup.', hist_empty:'No calculation saved yet.', hist_load:'Load', hist_unnamed:'Untitled', hist_days:'days',
+  calib:'Adjust effort values (calibration)',
+  footer:'Internal pre-sales estimate \u00b7 Basis: generic configuration interface \u00b7 Values are calibratable and do not replace a binding specification.',
+  modal_h:'Prompt template', modal_sub:'Generated from the current configuration \u2014 as input for creating the interface description.', copyOk:'Copied to clipboard', modal_close:'Close', modal_copy:'Copy',
+  saveFail:'Saving failed: browser storage unavailable or full.',
+  bd_dev:'Development effort', bd_custom:'incl. additional items', bd_ws:'+ Workshop/spec', bd_test:'+ Test/acceptance', bd_pm:'+ Project management', bd_risk:'+ Risk buffer', bd_total:'Total',
+  e_dir:'Direction', e_dir_erp:'ERP \u2192 SuperOffice', e_dir_so:'SuperOffice \u2192 ERP', e_dir_bi:'Bidirectional',
+  e_fields:'Number of fields', e_trig:'Delivery', e_trig_webhook:'Triggered (webhook on save)', e_trig_delta:'Scheduled (delta, e.g. hourly)',
+  e_key:'Matching key', e_key_clean:'Unique key', e_key_multi:'Ambiguous / combined', e_key_none:'No stable key',
+  e_erp:'ERP counterpart', e_udef:'mostly user-defined fields',
+  e_prep:'Field preparation (subset of the fields above)', e_map:'Code/list mapping', e_tr:'Transform', e_ru:'Special rules', e_fieldsword:'fields',
+  e_risk_h:'Complexity', e_risk_h2:'(elevated risk)', e_risk_pos:'Line items (not just header)', e_risk_version:'Versioning', e_risk_multiorder:'Multiple orders per quote', e_risk_variants:'Variants / alternative / optional items', e_risk_calc:'Quantity/price/discount logic',
+  e_tag:'Add. table',
+  trignote_bi:'Bidirectional: delivery must be triggered directly (webhook). Delta/scheduled is not allowed here.',
+  trignote_delta:'Delta/scheduled: periodically transfers the changed records (e.g. of the last hour). Suitable only for unidirectional interfaces.',
+  trignote_webhook:'Triggered: a webhook after saving in SuperOffice starts the export. Suitable when a REST endpoint is available.',
+  ENTNAMES:{firma:'Company', person:'Person', angebot:'Quote / sale', auftrag:'Order'},
+  fl_erpUnknown:'ERP unknown: plan a discovery phase; estimate has elevated uncertainty.',
+  fl_connFile:'File-based connection (XML/CSV): DataBridge should be used for this. This calculator (for the REST-based generic interface) is then not necessarily suitable \u2014 the estimate is only a rough orientation.',
+  fl_connNone:'No public endpoint available: first clarify feasibility together with the customer or their ERP vendor before a reliable effort estimate is possible.',
+  fl_onsite:'On-Site: check whether the purely digital REST variant is usable or whether on-site components are needed.',
+  fl_authUnknown:'Authentication method still open: clarify with the ERP vendor (API key, OAuth, certificate) \u2014 affects effort and feasibility.',
+  fl_personBi:'Person chosen bidirectional: not needed in most projects. Unidirectional recommended, saves effort and avoids scope creep.',
+  fl_quoteBi:'%s bidirectional: quote creation usually stays in the ERP. Provide bidirectional only when there is a clear need.',
+  fl_conflict:'%s: for bidirectional synchronisation the conflict handling must be defined (e.g. ERP wins, or latest timestamp). Default: ERP master.',
+  fl_noKey:'%s: no stable matching key \u2014 duplicate risk, manual linking logic needed. Clarify in advance how records are uniquely identified.',
+  fl_webhookNoRest:'%s: triggered delivery (webhook) requires a reachable ERP endpoint. Check the connection type.',
+  fl_riskMulti:'%s: multiple complexity factors active (line items, variants, etc.). No standard value applies here \u2014 binding only after a detailed workshop; the value is a lower bound.',
+  fl_noEntity:'No entity activated yet. Select at least one entity to get an estimate.',
+  fl_rights:'Permission-model break (e.g. multiple salesperson codes per person): overrides the SuperOffice standard model. Handle as a custom service.',
+  fl_delHard:'Deletions are synchronised: clarify whether hard deletion in the target system is desired or whether archiving/deactivation would be safer.',
+  fl_migLarge:'Large migration volume: consider performance, throttling (rate limits) and the runtime window of the initial load.',
+  tips:{
+    erpSystem:{t:'Which ERP is being integrated?',e:'Common systems to choose from; for others select \u201cOther\u201d and enter freely. Flows into the generated prompt.'},
+    erpExp:{t:'How much experience is there with this ERP?',e:'Known: already integrated, fields/endpoints proven. Similar: comparable system known. Unknown: first integration, analysis phase needed.'},
+    connType:{t:'How does SuperOffice obtain the ERP data?',e:'REST: live interface (preferred). File: ERP exports XML/CSV (rather DataBridge). No endpoint: ERP not reachable from outside.'},
+    erpDoc:{t:'Are the ERP side fields, endpoints and keys known?',e:'Yes: docs/Swagger available. Partially: only roughly known. No: must first be discovered through analysis (discovery effort).'},
+    auth:{t:'How does the interface authenticate against the ERP?',e:'API key/Basic: simple key in the header. OAuth 2.0: token flow, somewhat more effort. Certificate/mTLS: mutual certificate check, highest effort. Choose \u201cOpen\u201d if still unclear.'},
+    pOnboard:{t:'Standard process for new companies.',e:'A new company without an ERP number is pushed to the ERP; if an ERP number is returned it is linked, otherwise it stays in the CRM only.'},
+    pLock:{t:'Protection of ERP-managed fields in the CRM.',e:'After linking, fields maintained by the ERP are made read-only in SuperOffice so they cannot be overwritten manually.'},
+    pRights:{t:'Constellations that break the SuperOffice standard model.',e:'E.g. one owner has multiple salesperson codes in the ERP while a company in the CRM has only one owner. Requires custom logic.'},
+    pMonitor:{t:'Behaviour on failed transfers.',e:'Logging, automatic retry, notification for persistently failing records instead of silently discarding them.'},
+    deleteMode:{t:'What happens when a record is deleted in the source?',e:'Do not synchronise: deletions are ignored (safest). Soft delete: flag as inactive. Synchronise: record is also deleted in the target (caution with links).'},
+    migrate:{t:'One-time initial load of the target system at go-live.',e:'Volume drives effort and runtime. For large volumes consider rate limits and time windows. Independent of the ongoing delta/webhook operation.'},
+    e_dir:{t:'In which direction is data synchronised?',e:'ERP \u2192 SuperOffice: ERP leads (e.g. master data). SuperOffice \u2192 ERP: CRM leads (e.g. new prospects). Bidirectional: both sides write \u2013 requires conflict rules.'},
+    e_fields:{t:'How many fields of this entity are synchronised?',e:'Count only the fields actually being reconciled (e.g. company: name, address, VAT ID, industry \u2026), not all existing ones.'},
+    e_trig:{t:'When is data transferred?',e:'Triggered: immediately on save via webhook (current, needs endpoint). Scheduled: only changed records (delta) are sent periodically \u2013 unidirectional only.'},
+    e_key:{t:'How is a record uniquely recognised on both sides?',e:'Unique: one stable key per side (company \u2192 ERP number, person \u2192 email, quote \u2192 quote number). Ambiguous: only a combination (name+city) or multiple possible keys. None: no reliable key \u2013 duplicate risk.'},
+    e_udef:{t:'Are they mostly custom fields (UDEF) rather than standard fields?',e:'User-defined fields increase mapping and testing effort because they are customer-specific and have no standard behaviour.'},
+    e_map:{t:'Fields whose values must be translated between the systems.',e:'Examples: salutation 1/2 \u2192 Mr/Ms, country code CH/CHE \u2192 Switzerland, industry/status codes, currency codes. Count fields with a fixed value list that does not match 1:1.'},
+    e_tr:{t:'Fields whose value is converted/reformatted before writing.',e:'Examples: date DD.MM.YYYY \u2192 ISO, merge first+last name, normalise phone, amount \u00d7 factor, upper/lower case. Count fields not taken over unchanged.'},
+    e_ru:{t:'Fields with conditional logic on write.',e:'Examples: do not overwrite if already filled; set default on empty value; write only if status = active; ignore field if source empty. Count fields with such if-then logic.'},
+    e_risk:{t:'These factors make quote/order hard to standardise.',e:'Line items instead of just header; multiple quote versions; multiple orders per quote; variants/alternative items (no real equivalent in SuperOffice); quantity/price/discount calculation. From two factors on: individual estimate.'},
+    e_erp:{firma:'e.g. Debtor. If several: \u201cDebtor, Creditor\u201d (one CRM entity \u2194 multiple ERP entities).',person:'e.g. contact person.',angebot:'e.g. quote / order header.',auftrag:'e.g. order / document.',sub:'Free text, several comma-separated if needed.', title:'What is this entity called in the ERP?', tail:'Enter multiple counterparts comma-separated.'},
+    e_erpph:{firma:'e.g. Debtor (or Debtor, Creditor)',person:'e.g. contact',angebot:'e.g. quote',auftrag:'e.g. order',sub:'ERP entity/entities'}
+  }
+}
+};
+function t(k){ return (T[LANG] && T[LANG][k]!=null) ? T[LANG][k] : (T.de[k]!=null?T.de[k]:k); }
+
+/* ===== konfigurierbare Aufwandswerte (Tage) ===== */
+const W = {
+  base: 0.5,
+  ent_firma_uni: 1.0, ent_firma_bi: 2.5,
+  ent_person_uni: 1.0, ent_person_bi: 2.5,
+  ent_angebot_uni: 3.0, ent_angebot_bi: 7.0,
+  ent_auftrag_uni: 3.0, ent_auftrag_bi: 7.0,
+  ent_zusatz_uni: 1.0, ent_zusatz_bi: 2.0,
+  field_per10: 0.5,
+  udef_bonus: 0.5,
+  map_per: 0.1,
+  transform_per: 0.2,
+  rules_per: 0.25,
+  conflict_extra: 1.0,
+  trig_webhook: 0.5,
+  trig_delta: 1.0,
+  key_multi: 1.0, key_none: 2.0,
+  p_onboard: 1.5, p_lock: 1.0, p_rights: 2.5, p_monitor: 1.5,
+  del_soft: 0.5, del_hard: 1.0,
+  mig_small: 1.0, mig_medium: 2.0, mig_large: 4.0,
+  auth_oauth: 0.5, auth_cert: 1.0,
+  risk_pos: 2.0, risk_version: 1.5, risk_multiorder: 1.5, risk_variants: 3.0, risk_calc: 2.0,
+  gate_erp_similar: 0.5, gate_erp_unknown: 1.0,
+  gate_conn_file: 1.5, gate_conn_none: 4.0,
+  gate_doc_partial: 1.0, gate_doc_no: 2.5
+};
+const Wlabels = {
+  base:"Grundaufwand Basis",
+  ent_firma_uni:"Firma uni", ent_firma_bi:"Firma bi",
+  ent_person_uni:"Person uni", ent_person_bi:"Person bi",
+  ent_angebot_uni:"Angebot uni", ent_angebot_bi:"Angebot bi",
+  ent_auftrag_uni:"Auftrag uni", ent_auftrag_bi:"Auftrag bi",
+  ent_zusatz_uni:"Zusatztab. uni", ent_zusatz_bi:"Zusatztab. bi",
+  field_per10:"je 10 Felder", udef_bonus:"UDEF-Zuschlag",
+  map_per:"je Code-Mapping", transform_per:"je Transform", rules_per:"je Sonderregel",
+  conflict_extra:"Konfliktbehandlung (bi)",
+  trig_webhook:"Trigger Webhook", trig_delta:"Trigger Delta/Zeit",
+  key_multi:"Schl\u00fcssel mehrdeutig", key_none:"kein Schl\u00fcssel",
+  p_onboard:"Onboarding", p_lock:"Feldsperre", p_rights:"Rechtekonzept-Bruch", p_monitor:"Monitoring",
+  del_soft:"L\u00f6schen soft", del_hard:"L\u00f6schen hart",
+  mig_small:"Migration klein", mig_medium:"Migration mittel", mig_large:"Migration gro\u00df",
+  auth_oauth:"Auth OAuth", auth_cert:"Auth Zertifikat",
+  risk_pos:"Positionen", risk_version:"Versionierung", risk_multiorder:"Mehr-Auftr\u00e4ge", risk_variants:"Varianten", risk_calc:"Berechnungslogik",
+  gate_erp_similar:"ERP \u00e4hnlich", gate_erp_unknown:"ERP unbekannt",
+  gate_conn_file:"nur Datei", gate_conn_none:"kein Endpunkt",
+  gate_doc_partial:"Doku teilw.", gate_doc_no:"Doku fehlt"
+};
+const Wcats = {
+  "Basis & Gate":["base","gate_erp_similar","gate_erp_unknown","gate_conn_file","gate_conn_none","gate_doc_partial","gate_doc_no","auth_oauth","auth_cert"],
+  "Entit\u00e4ten":["ent_firma_uni","ent_firma_bi","ent_person_uni","ent_person_bi","ent_angebot_uni","ent_angebot_bi","ent_auftrag_uni","ent_auftrag_bi","ent_zusatz_uni","ent_zusatz_bi","field_per10","udef_bonus"],
+  "Aufbereitung":["map_per","transform_per","rules_per","conflict_extra","key_multi","key_none"],
+  "\u00dcbermittlung":["trig_webhook","trig_delta"],
+  "Prozesse & Betrieb":["p_onboard","p_lock","p_rights","p_monitor","del_soft","del_hard","mig_small","mig_medium","mig_large"],
+  "Risiko Angebot/Auftrag":["risk_pos","risk_version","risk_multiorder","risk_variants","risk_calc"]
+};
+
+const ENTITIES = [
+  {key:"firma",  name:"Firma"},
+  {key:"person", name:"Person"},
+  {key:"angebot",name:"Angebot / Verkauf"},
+  {key:"auftrag",name:"Auftrag"}
+];
+
+/* ===== Entity-UI ===== */
+function tipH(key,right){
+  const tp=T[LANG].tips[key]; if(!tp) return '';
+  return '<span class="tip'+(right?' tip-r':'')+'" tabindex="0">?<span class="tipbox"><b>'+tp.t+'</b><span class="ex">'+tp.e+'</span></span></span>';
+}
+function entityMarkup(key,name,isSub){
+  const L=T[LANG];
+  const dispName = isSub ? name : (L.ENTNAMES[key]||name);
+  const tag = isSub ? '<span class="tag" data-i18ntag>'+L.e_tag+'</span>' : '';
+  const del = isSub ? '<button class="btn-del" type="button" onclick="removeSubtable(\''+key+'\')">\u00d7</button>' : '';
+  // ERP-Pendant Tooltip + Placeholder je Entität
+  const erpTipKey = isSub ? 'sub' : key;
+  const erpTip = '<span class="tip" tabindex="0">?<span class="tipbox"><b>'+L.tips.e_erp.title+'</b><span class="ex">'+(L.tips.e_erp[erpTipKey]||L.tips.e_erp.sub)+' '+L.tips.e_erp.tail+'</span></span></span>';
+  const erpPh = L.tips.e_erpph[erpTipKey]||L.tips.e_erpph.sub;
+  const riskSection = (key==='angebot'||key==='auftrag') ? `
+      <div class="ent-section">
+        <div class="seclabel">${L.e_risk_h} ${dispName} ${L.e_risk_h2}${tipH('e_risk',true)}</div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" class="entRisk" data-risk="pos" data-ent="${key}"> ${L.e_risk_pos}</label>
+          <label class="check"><input type="checkbox" class="entRisk" data-risk="version" data-ent="${key}"> ${L.e_risk_version}</label>
+          <label class="check"><input type="checkbox" class="entRisk" data-risk="multiorder" data-ent="${key}"> ${L.e_risk_multiorder}</label>
+          <label class="check"><input type="checkbox" class="entRisk" data-risk="variants" data-ent="${key}"> ${L.e_risk_variants}</label>
+          <label class="check"><input type="checkbox" class="entRisk" data-risk="calc" data-ent="${key}"> ${L.e_risk_calc}</label>
+        </div>
+      </div>` : '';
+  return `
+    <div class="entity-head">
+      <span class="${isSub?'sub-name':'name'}" data-entname="${key}" data-rawname="${(dispName||'').replace(/"/g,'&quot;')}">${tag}${dispName}</span>
+      <label class="switch">
+        <input type="checkbox" data-ent="${key}" class="entToggle">
+        <span class="track"></span><span class="knob"></span>
+      </label>
+      ${del}
+    </div>
+    <div class="entity-body">
+      <div class="row r2">
+        <div class="field" style="margin-bottom:0">
+          <label>${L.e_dir}${tipH('e_dir')}</label>
+          <select class="entDir" data-ent="${key}">
+            <option value="uni_erp">${L.e_dir_erp}</option>
+            <option value="uni_so">${L.e_dir_so}</option>
+            <option value="bi">${L.e_dir_bi}</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>${L.e_fields}${tipH('e_fields',true)}</label>
+          <input type="number" class="entFields" data-ent="${key}" min="1" value="10">
+        </div>
+      </div>
+      <div class="row r2" style="margin-top:12px">
+        <div class="field" style="margin-bottom:0">
+          <label>${L.e_trig}${tipH('e_trig')}</label>
+          <select class="entTrig" data-ent="${key}">
+            <option value="webhook">${L.e_trig_webhook}</option>
+            <option value="delta">${L.e_trig_delta}</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>${L.e_key}${tipH('e_key',true)}</label>
+          <select class="entKey" data-ent="${key}">
+            <option value="clean">${L.e_key_clean}</option>
+            <option value="multi">${L.e_key_multi}</option>
+            <option value="none">${L.e_key_none}</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin:12px 0 0">
+        <label>${L.e_erp}${erpTip}</label>
+        <input type="text" class="entErp" data-ent="${key}" placeholder="${erpPh}">
+      </div>
+      <div class="field" style="margin:12px 0 0">
+        <label class="check"><input type="checkbox" class="entUdef" data-ent="${key}"> ${L.e_udef}${tipH('e_udef')}</label>
+      </div>
+      <div class="ent-section">
+        <div class="seclabel">${L.e_prep}</div>
+        <div class="row r3">
+          <div class="field" style="margin-bottom:0">
+            <label>${L.e_map}${tipH('e_map')}</label>
+            <input type="number" class="entMap" data-ent="${key}" min="0" value="0">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>${L.e_tr}${tipH('e_tr')}</label>
+            <input type="number" class="entTransform" data-ent="${key}" min="0" value="0">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>${L.e_ru}${tipH('e_ru',true)}</label>
+            <input type="number" class="entRules" data-ent="${key}" min="0" value="0">
+          </div>
+        </div>
+      </div>
+      ${riskSection}
+      <div class="trig-note" data-trignote="${key}"></div>
+      <div class="flag-slot" data-entslot="${key}"></div>
+    </div>`;
+}
+
+const entWrap = document.getElementById('entities');
+ENTITIES.forEach(e=>{
+  const d=document.createElement('div');
+  d.className='entity';d.id='ent-'+e.key;
+  d.innerHTML=entityMarkup(e.key,e.name,false);
+  entWrap.appendChild(d);
+});
+
+/* ===== dynamische Zusatztabellen ===== */
+const subWrap=document.getElementById('subtables');
+let subCounter=0;
+function refreshSubEmpty(){
+  const has=subWrap.querySelector('.entity');
+  let note=subWrap.querySelector('.empty-note');
+  if(!has){ if(!note){note=document.createElement('div');note.className='empty-note';note.setAttribute('data-i18n','subtables_empty');note.textContent=t('subtables_empty');subWrap.appendChild(note);} }
+  else if(note){note.remove();}
+}
+function addSubtable(){
+  const inp=document.getElementById('newSubName');
+  const name=(inp.value||'').trim();
+  if(!name){inp.focus();return;}
+  const key='sub_'+(++subCounter);
+  const d=document.createElement('div');
+  d.className='entity';d.id='ent-'+key;
+  d.innerHTML=entityMarkup(key,name,true);
+  subWrap.appendChild(d);
+  wireEntity(d);
+  inp.value='';
+  refreshSubEmpty();
+  calc();
+}
+function removeSubtable(key){
+  const el=document.getElementById('ent-'+key);
+  if(el)el.remove();
+  refreshSubEmpty();
+  calc();
+}
+document.getElementById('newSubName').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();addSubtable();}});
+refreshSubEmpty();
+
+/* ===== individuelle Zusatzpositionen ===== */
+const customWrap=document.getElementById('customRows');
+let customCounter=0;
+function addCustom(desc,days){
+  const id='c'+(++customCounter);
+  const row=document.createElement('div');
+  row.className='custom-row';row.id=id;
+  row.innerHTML=`
+    <input type="text" class="cDesc" data-i18n-ph="c5_descPh" placeholder="${t('c5_descPh')}" value="${(desc||'').replace(/"/g,'&quot;')}">
+    <input type="number" class="cDays" min="0" step="0.25" data-i18n-ph="c5_daysPh" placeholder="${t('c5_daysPh')}" value="${days!=null?days:''}">
+    <button class="cdel" type="button" onclick="removeCustom('${id}')">\u00d7</button>`;
+  customWrap.appendChild(row);
+  row.querySelectorAll('input').forEach(i=>i.addEventListener('input',calc));
+  calc();
+}
+function removeCustom(id){ const el=document.getElementById(id); if(el)el.remove(); calc(); }
+
+function wireEntity(el){
+  const tog=el.querySelector('.entToggle');
+  tog.addEventListener('change',()=>{el.classList.toggle('on',tog.checked);calc();});
+  el.querySelectorAll('select,input').forEach(x=>x.addEventListener('input',calc));
+  const dir=el.querySelector('.entDir');
+  dir.addEventListener('change',()=>{syncTrigger(el);calc();});
+  syncTrigger(el);
+}
+function syncTrigger(el){
+  const dir=el.querySelector('.entDir').value;
+  const trig=el.querySelector('.entTrig');
+  const note=el.querySelector('.trig-note');
+  if(dir==='bi'){
+    trig.value='webhook'; trig.disabled=true;
+    note.className='trig-note locked';
+    note.textContent=t('trignote_bi');
+  } else {
+    trig.disabled=false;
+    note.className='trig-note';
+    note.textContent = (trig.value==='delta') ? t('trignote_delta') : t('trignote_webhook');
+  }
+}
+document.querySelectorAll('#entities > .entity').forEach(wireEntity);
+
+/* ===== Kalibrierungs-Editor ===== */
+const wWrap=document.getElementById('weights');
+Object.entries(Wcats).forEach(([cat,keys])=>{
+  const c=document.createElement('div');c.className='cat';c.textContent=cat;wWrap.appendChild(c);
+  keys.forEach(k=>{
+    const l=document.createElement('div');l.className='lbl';l.textContent=Wlabels[k];
+    const i=document.createElement('input');i.type='number';i.step='0.05';i.value=W[k];i.dataset.w=k;
+    i.addEventListener('input',()=>{W[k]=parseFloat(i.value)||0;calc();});
+    wWrap.appendChild(l);wWrap.appendChild(i);
+  });
+});
+
+/* ===== Währung ===== */
+let currency='CHF';
+const RATE_DEFAULT={CHF:1800,EUR:1450};
+document.querySelectorAll('#curSeg button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#curSeg button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    const newCur=b.dataset.cur;
+    const rateEl=document.getElementById('rate');
+    if(parseFloat(rateEl.value)===RATE_DEFAULT[currency]) rateEl.value=RATE_DEFAULT[newCur];
+    currency=newCur;
+    document.getElementById('rateHint').textContent=t('rateStd')+currency;
+    document.getElementById('priceCur').textContent=currency;
+    calc();
+  });
+});
+
+/* ===== Helpers ===== */
+const $=id=>document.getElementById(id);
+const num=id=>parseFloat($(id).value)||0;
+const chk=id=>$(id).checked;
+function fmt(n){return n.toLocaleString('de-CH',{maximumFractionDigits:0});}
+function d1(n){return n.toLocaleString('de-CH',{maximumFractionDigits:1});}
+
+document.querySelectorAll('.card select, .card input, #rate, #discount').forEach(el=>{
+  if(el.closest('.entity')) return;
+  el.addEventListener('input',calc);
+});
+
+/* ERP-System: Freitextfeld nur bei "Anderes" */
+function syncErpOther(){
+  const other=$('erpSystem').value==='__other';
+  $('erpOtherWrap').style.display=other?'':'none';
+}
+$('erpSystem').addEventListener('change',()=>{ syncErpOther(); calc(); });
+syncErpOther();
+
+/* ===== Kern ===== */
+function calc(){
+  const parts=[];
+  const flags=[];
+  let dev=W.base;
+  parts.push({label:'Grundaufwand Basis',days:W.base});
+
+  // Gate
+  const erp=$('erpKnown').value;
+  if(erp==='similar'){dev+=W.gate_erp_similar;parts.push({label:'ERP \u00e4hnlich',days:W.gate_erp_similar});}
+  if(erp==='unknown'){dev+=W.gate_erp_unknown;parts.push({label:'ERP unbekannt (Discovery)',days:W.gate_erp_unknown});
+    flags.push({t:'warn',ic:'!',where:'gate',txt:t('fl_erpUnknown')});}
+  const conn=$('connType').value, connRest=conn==='rest';
+  if(conn==='file'){dev+=W.gate_conn_file;parts.push({label:'Nur Dateilieferung',days:W.gate_conn_file});
+    flags.push({t:'warn',ic:'\u2715',where:'gate',txt:t('fl_connFile')});}
+  if(conn==='none'){dev+=W.gate_conn_none;parts.push({label:'Kein \u00f6ffentl. Endpunkt',days:W.gate_conn_none});
+    flags.push({t:'warn',ic:'\u2715',where:'gate',txt:t('fl_connNone')});}
+  const docv=$('erpDoc').value;
+  if(docv==='partial'){dev+=W.gate_doc_partial;parts.push({label:'ERP teilw. dokumentiert',days:W.gate_doc_partial});}
+  if(docv==='no'){dev+=W.gate_doc_no;parts.push({label:'ERP-Doku fehlt',days:W.gate_doc_no});}
+  if($('soVariant').value==='onsite'){
+    flags.push({t:'info',ic:'i',where:'gate',txt:t('fl_onsite')});
+  }
+  const auth=$('auth').value;
+  if(auth==='oauth'){dev+=W.auth_oauth;parts.push({label:'Auth OAuth 2.0',days:W.auth_oauth});}
+  if(auth==='cert'){dev+=W.auth_cert;parts.push({label:'Auth Zertifikat/mTLS',days:W.auth_cert});}
+  if(auth==='unknown'){flags.push({t:'info',ic:'i',where:'gate',txt:t('fl_authUnknown')});}
+
+  // Entitäten
+  let entDays=0, activeCount=0;
+  const entList=[];
+  document.querySelectorAll('.entity').forEach(el=>{
+    const tog=el.querySelector('.entToggle');
+    if(!tog.checked) return;
+    activeCount++;
+    const key=tog.dataset.ent;
+    const isSub=key.startsWith('sub_');
+    const name=el.querySelector(isSub?'.sub-name':'.name').getAttribute('data-rawname').trim();
+    const dir=el.querySelector('.entDir').value;
+    const fields=parseFloat(el.querySelector('.entFields').value)||0;
+    const udef=el.querySelector('.entUdef').checked;
+    const trig=el.querySelector('.entTrig').value;
+    const erpName=(el.querySelector('.entErp').value||'').trim();
+    const bi=dir==='bi';
+
+    const wk = isSub ? (bi?'ent_zusatz_bi':'ent_zusatz_uni') : (bi?'ent_'+key+'_bi':'ent_'+key+'_uni');
+    let d=W[wk]||0;
+    d+=Math.ceil(fields/10)*W.field_per10;
+    if(udef) d+=W.udef_bonus;
+    d += (trig==='delta') ? W.trig_delta : W.trig_webhook;
+
+    const mapN=Math.min(parseFloat(el.querySelector('.entMap').value)||0, fields);
+    const trN=Math.min(parseFloat(el.querySelector('.entTransform').value)||0, fields);
+    const ruN=Math.min(parseFloat(el.querySelector('.entRules').value)||0, fields);
+    d += mapN*W.map_per + trN*W.transform_per + ruN*W.rules_per;
+
+    let conflict=0;
+    if(bi){ conflict=W.conflict_extra; d+=conflict; }
+
+    // Matching-Schlüssel pro Entität
+    const keyVal=el.querySelector('.entKey').value;
+    if(keyVal==='multi') d+=W.key_multi;
+    if(keyVal==='none') d+=W.key_none;
+
+    let entRiskLabels=[];
+    if(key==='angebot'||key==='auftrag'){
+      el.querySelectorAll('.entRisk').forEach(cb=>{
+        if(cb.checked){
+          const rk=cb.dataset.risk;
+          d+=W['risk_'+rk]||0;
+          entRiskLabels.push(rk);
+        }
+      });
+    }
+
+    entDays+=d;
+    parts.push({label:name+(bi?' (bi)':' (uni)')+(trig==='delta'?' \u00b7 Delta':' \u00b7 Webhook'),days:d});
+    const dirLabel = bi?'bidirektional':(dir==='uni_erp'?'ERP \u2192 SuperOffice':'SuperOffice \u2192 ERP');
+    const keyLabel = keyVal==='clean'?'eindeutiger Schl\u00fcssel':(keyVal==='multi'?'mehrdeutig/kombiniert':'kein stabiler Schl\u00fcssel');
+    entList.push({name,isSub,erpName,dir:dirLabel,bi,fields,udef,trig,mapN,trN,ruN,conflict,keyVal,keyLabel,riskLabels:entRiskLabels,days:d});
+
+    const entWhere='ent:'+key;
+    const tf=(k)=>t(k).replace('%s',name);
+    if(key==='person'&&bi){
+      flags.push({t:'plum',ic:'\u2605',where:entWhere,txt:t('fl_personBi')});
+    }
+    if((key==='angebot'||key==='auftrag')&&bi){
+      flags.push({t:'plum',ic:'\u2605',where:entWhere,txt:tf('fl_quoteBi')});
+    }
+    if(bi){
+      flags.push({t:'info',ic:'i',where:entWhere,txt:tf('fl_conflict')});
+    }
+    if(keyVal==='none'){
+      flags.push({t:'warn',ic:'!',where:entWhere,txt:tf('fl_noKey')});
+    }
+    if(trig==='webhook' && !connRest){
+      flags.push({t:'info',ic:'i',where:entWhere,txt:tf('fl_webhookNoRest')});
+    }
+    if(entRiskLabels.length>=2){
+      flags.push({t:'warn',ic:'\u2715',where:entWhere,txt:tf('fl_riskMulti')});
+    }
+  });
+  dev+=entDays;
+  if(activeCount===0){
+    flags.push({t:'info',ic:'i',where:'entities',txt:t('fl_noEntity')});
+  }
+
+  // Prozesse & Betrieb
+  let proc=0;
+  if(chk('pOnboard')){proc+=W.p_onboard;parts.push({label:'Onboarding-Prozess',days:W.p_onboard});}
+  if(chk('pLock')){proc+=W.p_lock;parts.push({label:'Feldsperre',days:W.p_lock});}
+  if(chk('pRights')){proc+=W.p_rights;parts.push({label:'Rechtekonzept-Bruch',days:W.p_rights});
+    flags.push({t:'warn',ic:'!',where:'process',txt:t('fl_rights')});}
+  if(chk('pMonitor')){proc+=W.p_monitor;parts.push({label:'Monitoring',days:W.p_monitor});}
+  const del=$('deleteMode').value;
+  if(del==='soft'){proc+=W.del_soft;parts.push({label:'L\u00f6schen (soft)',days:W.del_soft});}
+  if(del==='hard'){proc+=W.del_hard;parts.push({label:'L\u00f6schen synchronisieren',days:W.del_hard});
+    flags.push({t:'info',ic:'i',where:'process',txt:t('fl_delHard')});}
+  const mig=$('migrate').value;
+  if(mig==='small'){proc+=W.mig_small;parts.push({label:'Migration klein',days:W.mig_small});}
+  if(mig==='medium'){proc+=W.mig_medium;parts.push({label:'Migration mittel',days:W.mig_medium});}
+  if(mig==='large'){proc+=W.mig_large;parts.push({label:'Migration gro\u00df',days:W.mig_large});
+    flags.push({t:'info',ic:'i',where:'process',txt:t('fl_migLarge')});}
+  dev+=proc;
+
+  // individuelle Zusatzpositionen (zählen zum Entwicklungsaufwand)
+  let customDays=0; const customList=[];
+  document.querySelectorAll('#customRows .custom-row').forEach(r=>{
+    const desc=(r.querySelector('.cDesc').value||'').trim();
+    const cd=parseFloat(r.querySelector('.cDays').value)||0;
+    if(desc||cd){ customList.push({desc:desc||(LANG==='en'?'(no description)':'(ohne Beschreibung)'),days:cd}); customDays+=cd; }
+  });
+  dev+=customDays;
+
+  // Aufschläge
+  const wsBase=num('aWorkshopBase'), wsPer=num('aWorkshopPer');
+  const ws = activeCount>0 ? (wsBase + wsPer*activeCount) : 0;
+  const ts = dev*(num('aTest')/100);
+  const subtotal = dev + ws + ts;
+  const pm = subtotal*(num('aPM')/100);
+  const rk = subtotal*(num('aRisk')/100);
+  const total = subtotal + pm + rk;
+
+  // Render
+  $('days').textContent=d1(total);
+  const rate=num('rate');
+  const disc=Math.min(Math.max(num('discount'),0),100);
+  const gross=total*rate;
+  const net=gross*(1-disc/100);
+  $('priceVal').textContent=fmt(net);
+  $('priceCur').textContent=currency;
+  $('priceNote').textContent = disc>0 ? t('priceNoteDisc')(gross,currency,disc) : t('priceNoteList')(rate,currency);
+
+  const bd=$('breakdown'); bd.innerHTML='';
+  const dU=LANG==='en'?' d':' T';
+  const brow=(lbl,val,cls)=>bd.insertAdjacentHTML('beforeend','<div class="brk-row '+(cls||'')+'"><span>'+lbl+'</span><b>'+d1(val)+dU+'</b></div>');
+  brow(t('bd_dev'),dev);
+  if(customDays)brow(t('bd_custom'),customDays,'sub');
+  if(ws)brow(t('bd_ws'),ws);
+  if(ts)brow(t('bd_test')+' ('+num('aTest')+'%)',ts);
+  if(pm)brow(t('bd_pm')+' ('+num('aPM')+'%)',pm);
+  if(rk)brow(t('bd_risk')+' ('+num('aRisk')+'%)',rk);
+  brow(t('bd_total'),total,'total');
+
+  renderFlags(flags);
+
+  LAST = {
+    erpSystem: ($('erpSystem').value==='__other' ? (($('erpOther').value||'').trim()||'Anderes (nicht spezifiziert)') : $('erpSystem').value),
+    erp:$('erpKnown').options[$('erpKnown').selectedIndex].text,
+    conn:$('connType').options[$('connType').selectedIndex].text,
+    erpDoc:$('erpDoc').options[$('erpDoc').selectedIndex].text,
+    soVariant:$('soVariant').options[$('soVariant').selectedIndex].text,
+    auth:$('auth').options[$('auth').selectedIndex].text,
+    connFile:conn==='file', connNone:conn==='none', connRest,
+    entities:entList, activeCount,
+    custom:customList, customDays,
+    proc:{onboard:chk('pOnboard'),lock:chk('pLock'),rights:chk('pRights'),monitor:chk('pMonitor')},
+    deleteMode:$('deleteMode').options[$('deleteMode').selectedIndex].text,
+    migrate:$('migrate').options[$('migrate').selectedIndex].text,
+    dev, ws, ts, pm, rk, total,
+    surcharge:{wsBase,wsPer,test:num('aTest'),pm:num('aPM'),risk:num('aRisk')},
+    currency, rate, discount:disc, net,
+    flags:flags.map(f=>({type:f.t,txt:f.txt}))
+  };
+}
+let LAST={};
+
+function flagHTML(f){ return '<div class="flag '+f.t+'"><span class="ic">'+f.ic+'</span><span>'+f.txt+'</span></div>'; }
+function renderFlags(flags){
+  const slotMap={gate:'slot-gate',process:'slot-process'};
+  document.querySelectorAll('.flag-slot').forEach(s=>{ if(s.id!=='slot-noentity') s.innerHTML=''; });
+  const noEntityFlag=flags.find(f=>f.where==='entities');
+  const noEntitySlot=document.getElementById('slot-noentity');
+  if(noEntityFlag){ if(!noEntitySlot.firstChild) noEntitySlot.innerHTML=flagHTML(noEntityFlag); }
+  else if(noEntitySlot.firstChild){ noEntitySlot.innerHTML=''; }
+  flags.forEach(f=>{
+    if(f.where==='entities') return;
+    let target=null;
+    if(f.where && f.where.indexOf('ent:')===0){
+      const k=f.where.slice(4);
+      const el=document.getElementById('ent-'+k);
+      if(el) target=el.querySelector('[data-entslot="'+k+'"]');
+    } else if(slotMap[f.where]){ target=document.getElementById(slotMap[f.where]); }
+    if(target) target.insertAdjacentHTML('beforeend',flagHTML(f));
+  });
+}
+
+function resetAll(){
+  document.querySelectorAll('#subtables .entity').forEach(el=>el.remove());
+  refreshSubEmpty();
+  document.querySelectorAll('#customRows .custom-row').forEach(el=>el.remove());
+  document.querySelectorAll('.entToggle').forEach(t=>{t.checked=false;document.getElementById('ent-'+t.dataset.ent).classList.remove('on');});
+  document.querySelectorAll('.entDir').forEach(s=>s.value='uni_erp');
+  document.querySelectorAll('.entFields').forEach(i=>i.value=10);
+  document.querySelectorAll('.entUdef').forEach(c=>c.checked=false);
+  document.querySelectorAll('.entMap,.entTransform,.entRules').forEach(i=>i.value=0);
+  document.querySelectorAll('.entKey').forEach(s=>s.value='clean');
+  document.querySelectorAll('.entErp').forEach(i=>i.value='');
+  document.querySelectorAll('.entRisk').forEach(c=>c.checked=false);
+  document.querySelectorAll('.entTrig').forEach(s=>{s.value='webhook';s.disabled=false;});
+  document.querySelectorAll('#entities > .entity').forEach(syncTrigger);
+  ['pLock','pRights','pMonitor'].forEach(id=>$(id).checked=false);
+  $('pOnboard').checked=true;
+  $('calcName').value='';
+  $('erpSystem').value='SAP S/4HANA';$('erpOther').value='';syncErpOther();
+  $('erpKnown').value='known';$('connType').value='rest';$('erpDoc').value='yes';$('soVariant').value='cloud';
+  $('auth').value='apikey';$('deleteMode').value='none';$('migrate').value='none';
+  $('aWorkshopBase').value=1;$('aWorkshopPer').value=0.5;$('aTest').value=20;$('aPM').value=12;$('aRisk').value=10;
+  $('discount').value=0;
+  calc();
+}
+
+/* ===== Speichern / Laden (localStorage) ===== */
+const STORE_KEY='so_iface_calc_v1';
+
+function snapshot(){
+  const subs=[];
+  document.querySelectorAll('#subtables .entity').forEach(el=>{
+    subs.push({ name: el.querySelector('.sub-name').getAttribute('data-rawname').trim() });
+  });
+  const ent={};
+  document.querySelectorAll('.entity').forEach(el=>{
+    const k=el.querySelector('.entToggle').dataset.ent;
+    ent[k]={
+      on:el.querySelector('.entToggle').checked,
+      dir:el.querySelector('.entDir').value,
+      fields:el.querySelector('.entFields').value,
+      udef:el.querySelector('.entUdef').checked,
+      trig:el.querySelector('.entTrig').value,
+      mapN:el.querySelector('.entMap').value,
+      trN:el.querySelector('.entTransform').value,
+      ruN:el.querySelector('.entRules').value,
+      keyv:el.querySelector('.entKey').value,
+      erpName:el.querySelector('.entErp').value,
+      risk:[...el.querySelectorAll('.entRisk')].filter(c=>c.checked).map(c=>c.dataset.risk)
+    };
+  });
+  const customs=[];
+  document.querySelectorAll('#customRows .custom-row').forEach(r=>{
+    customs.push({desc:r.querySelector('.cDesc').value, days:r.querySelector('.cDays').value});
+  });
+  return {
+    v:1,
+    fields:{
+      erpSystem:$('erpSystem').value, erpOther:$('erpOther').value,
+      erpKnown:$('erpKnown').value, connType:$('connType').value, erpDoc:$('erpDoc').value,
+      soVariant:$('soVariant').value, auth:$('auth').value,
+      pOnboard:$('pOnboard').checked, pLock:$('pLock').checked, pRights:$('pRights').checked, pMonitor:$('pMonitor').checked,
+      deleteMode:$('deleteMode').value, migrate:$('migrate').value,
+      aWorkshopBase:$('aWorkshopBase').value, aWorkshopPer:$('aWorkshopPer').value,
+      aTest:$('aTest').value, aPM:$('aPM').value, aRisk:$('aRisk').value,
+      currency, rate:$('rate').value, discount:$('discount').value
+    },
+    subs, ent, customs
+  };
+}
+
+function restore(snap){
+  resetAll();
+  const f=snap.fields||{};
+  // dynamische Zusatztabellen wieder anlegen
+  (snap.subs||[]).forEach(s=>{
+    const inp=document.getElementById('newSubName'); inp.value=s.name; addSubtable();
+  });
+  // Felder
+  Object.entries(f).forEach(([id,val])=>{
+    if(id==='currency'){
+      if(val!==currency){ const btn=document.querySelector('#curSeg button[data-cur="'+val+'"]'); if(btn) btn.click(); }
+      return;
+    }
+    const el=$(id); if(!el) return;
+    if(el.type==='checkbox') el.checked=!!val; else el.value=val;
+  });
+  // Entitäten
+  Object.entries(snap.ent||{}).forEach(([k,e])=>{
+    const el=document.getElementById('ent-'+k); if(!el) return;
+    const tog=el.querySelector('.entToggle'); tog.checked=!!e.on; el.classList.toggle('on',!!e.on);
+    el.querySelector('.entDir').value=e.dir;
+    el.querySelector('.entFields').value=e.fields;
+    el.querySelector('.entUdef').checked=!!e.udef;
+    el.querySelector('.entTrig').value=e.trig;
+    el.querySelector('.entMap').value=e.mapN;
+    el.querySelector('.entTransform').value=e.trN;
+    el.querySelector('.entRules').value=e.ruN;
+    if(el.querySelector('.entKey')) el.querySelector('.entKey').value=e.keyv||'clean';
+    if(el.querySelector('.entErp')) el.querySelector('.entErp').value=e.erpName||'';
+    (e.risk||[]).forEach(r=>{ const cb=el.querySelector('.entRisk[data-risk="'+r+'"]'); if(cb) cb.checked=true; });
+    syncTrigger(el);
+  });
+  syncErpOther();
+  // individuelle Positionen
+  (snap.customs||[]).forEach(c=>addCustom(c.desc,c.days));
+  calc();
+}
+
+function getStore(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY))||[]; }catch(e){ return []; }
+}
+function setStore(arr){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(arr)); }catch(e){ alert(t('saveFail')); }
+}
+function todayStr(){
+  const d=new Date();
+  if(LANG==='en') return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+  return ('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear();
+}
+function saveCalc(){
+  const name=($('calcName').value||'').trim() || (t('hist_unnamed')+' \u2013 '+todayStr());
+  const arr=getStore();
+  const entry={ id:'k'+Date.now(), name, unnamed:!($('calcName').value||'').trim(), date:todayStr(), days:$('days').textContent, snap:snapshot() };
+  arr.unshift(entry);
+  setStore(arr.slice(0,50));
+  renderHistory();
+}
+function loadCalc(id){
+  const arr=getStore(); const e=arr.find(x=>x.id===id);
+  if(e){ restore(e.snap); $('calcName').value = e.unnamed ? '' : (e.name||''); }
+}
+function deleteCalc(id){
+  setStore(getStore().filter(x=>x.id!==id));
+  renderHistory();
+}
+function renderHistory(){
+  const list=$('histList'); const arr=getStore();
+  list.innerHTML='';
+  if(!arr.length){ list.insertAdjacentHTML('beforeend','<div class="hist-empty">'+t('hist_empty')+'</div>'); return; }
+  arr.forEach(e=>{
+    const safe=(e.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    list.insertAdjacentHTML('beforeend',
+      '<div class="hist-item"><div class="meta"><div class="hname">'+safe+'</div>'
+      +'<div class="hsub">'+e.date+' \u00b7 '+e.days+' '+t('hist_days')+'</div></div>'
+      +'<button class="hbtn" onclick="loadCalc(\''+e.id+'\')">'+t('hist_load')+'</button>'
+      +'<button class="hdel" onclick="deleteCalc(\''+e.id+'\')">\u00d7</button></div>');
+  });
+}
+
+/* ===== Prompt-Vorlage ===== */
+const PROMPT={
+de:{
+  intro:'Erstelle auf Basis der folgenden Konfiguration eine Schnittstellenbeschreibung, die dem Angebot beigelegt werden kann und zur L\u00f6sungsbeschreibung und Abgrenzung dient.',
+  guide:'Die Beschreibung richtet sich an den Kunden, ist professionell und sachlich formuliert (klares Deutsch, kein Marketing-Sprech) und macht insbesondere transparent, welche Prozesse und Entit\u00e4ten im Lieferumfang enthalten sind und welche ausdr\u00fccklich nicht. Strukturiere sie sinnvoll in: Ausgangslage/Zweck, L\u00f6sungsansatz (generische, konfigurierbare SuperOffice-Integrationsbasis), \u00fcbermittelte Entit\u00e4ten und Richtungen, \u00dcbermittlungsart/Trigger, Datenaufbereitung (Mapping/Transformation/Konfliktbehandlung), L\u00f6sch- und Migrationsverhalten, enthaltene Prozesse, etwaige individuelle Zusatzpositionen, Abgrenzung/nicht enthaltene Leistungen sowie Voraussetzungen auf Kundenseite. Weise abschlie\u00dfend darauf hin, dass die ERP-seitige Anbindung mit dem ERP-Anbieter des Kunden abzustimmen ist und dass es sich um eine konfigurierbare Schnittstelle handelt, nicht um eine vollautomatische Standardl\u00f6sung. Verfasse das Dokument auf Deutsch.',
+  config:'=== KONFIGURATION ===', context:'Rahmenbedingungen:',
+  erpSystem:'- ERP-System: ', erpExp:'- Erfahrung/Reifegrad: ', conn:'- Anbindungsart ERP-Seite: ', auth:'- Authentifizierung: ', erpDoc:'- ERP-Dokumentation/Standardisierung: ', soVariant:'- SuperOffice-Variante: ',
+  entities:'\u00dcbermittelte Entit\u00e4ten:', noEntity:'- (noch keine Entit\u00e4t aktiviert)',
+  trigDelta:'zeitgesteuert (Delta, periodisch)', trigWebhook:'getriggert (Webhook nach Speichern)',
+  sub:' [Zusatztabelle]', erpPref:' (ERP: ', dirWord:'Richtung ', fieldsWord:' Felder', udefWord:', \u00fcberwiegend benutzerdefiniert', deliv:', \u00dcbermittlung ', matching:', Matching: ',
+  prep:' | Aufbereitung: ', mapW:' Mapping', trW:' Transform', ruW:' Sonderregeln', biW:' | bidirektional inkl. Konfliktbehandlung', cplx:' | Komplexit\u00e4t: ',
+  riskMap:{pos:'Positionen',version:'Versionierung',multiorder:'mehrere Auftr\u00e4ge/Angebot',variants:'Varianten/Alternativpos.',calc:'Berechnungslogik'},
+  proc:'Prozesse & Betrieb:', procNone:'- (keine Prozessbausteine ausgew\u00e4hlt)',
+  pOnboard:'Firmen-Onboarding (Push bei fehlender ERP-Nummer, R\u00fccklieferung der ERP-Nummer, Verlinkung)', pLock:'Feldsperre/Schreibschutz nach Verlinkung', pRights:'Sonderfall Rechtekonzept (z.B. mehrere Verk\u00e4ufer-Codes je Person) \u2014 als Individualleistung', pMonitor:'Fehlerbehandlung & Monitoring',
+  del:'- L\u00f6schverhalten: ', mig:'- Initiale Datenmigration: ',
+  customH:'Individuelle Zusatzpositionen (nicht vom Standard abgedeckt):', daysParen:(d)=>' ('+d+' Tage)',
+  effortH:'Aufwand & Kondition (interne Orientierung, nicht zwingend in die Kundenbeschreibung \u00fcbernehmen):',
+  effortLine:(L)=>'- Entwicklung '+d1(L.dev)+' T, Workshop '+d1(L.ws)+' T, Test '+d1(L.ts)+' T, PL '+d1(L.pm)+' T, Risiko '+d1(L.rk)+' T',
+  totalLine:(L)=>'- Gesamtaufwand: '+d1(L.total)+' Tage',
+  rateLine:(L)=>'- Tagessatz: '+L.rate.toLocaleString('de-CH')+' '+L.currency+(L.discount>0?(', Rabatt '+L.discount+'%'):'')+', Angebotspreis '+Math.round(L.net).toLocaleString('de-CH')+' '+L.currency,
+  hintsH:'Zu ber\u00fccksichtigende Hinweise f\u00fcr die Abgrenzung:',
+  impFile:'WICHTIG: Die ERP-Seite ist dateibasiert angebunden (XML/CSV). Pr\u00fcfe, ob hierf\u00fcr DataBridge der geeignetere Weg ist, und formuliere die Abgrenzung entsprechend.',
+  impNone:'WICHTIG: Es ist kein \u00f6ffentlicher ERP-Endpunkt vorhanden. Die Machbarkeit ist vorab mit dem Kunden bzw. dessen ERP-Anbieter zu kl\u00e4ren; die Beschreibung sollte dies als offene Voraussetzung benennen.'
+},
+en:{
+  intro:'Based on the following configuration, create an interface description that can be attached to the quote and serves as a solution description and scope definition.',
+  guide:'The description is aimed at the customer, written professionally and factually (clear English, no marketing speak), and in particular makes transparent which processes and entities are included in the scope of delivery and which are explicitly not. Structure it sensibly into: background/purpose, solution approach (generic, configurable SuperOffice integration base), transferred entities and directions, delivery method/trigger, data preparation (mapping/transformation/conflict handling), deletion and migration behaviour, included processes, any individual additional items, scope/excluded services, and prerequisites on the customer side. Finally, point out that the ERP-side connection must be coordinated with the customer\u2019s ERP vendor and that this is a configurable interface, not a fully automated standard solution. Write the document in English.',
+  config:'=== CONFIGURATION ===', context:'Context:',
+  erpSystem:'- ERP system: ', erpExp:'- Experience/maturity: ', conn:'- ERP-side connection type: ', auth:'- Authentication: ', erpDoc:'- ERP documentation/standardisation: ', soVariant:'- SuperOffice edition: ',
+  entities:'Transferred entities:', noEntity:'- (no entity activated yet)',
+  trigDelta:'scheduled (delta, periodic)', trigWebhook:'triggered (webhook on save)',
+  sub:' [additional table]', erpPref:' (ERP: ', dirWord:'direction ', fieldsWord:' fields', udefWord:', mostly user-defined', deliv:', delivery ', matching:', matching: ',
+  prep:' | preparation: ', mapW:' mapping', trW:' transform', ruW:' special rules', biW:' | bidirectional incl. conflict handling', cplx:' | complexity: ',
+  riskMap:{pos:'line items',version:'versioning',multiorder:'multiple orders/quote',variants:'variants/alternative items',calc:'calculation logic'},
+  proc:'Processes & operation:', procNone:'- (no process building blocks selected)',
+  pOnboard:'Company onboarding (push when ERP number missing, return of the ERP number, linking)', pLock:'Field lock/write protection after linking', pRights:'Special case permission model (e.g. multiple salesperson codes per person) \u2014 as a custom service', pMonitor:'Error handling & monitoring',
+  del:'- Deletion behaviour: ', mig:'- Initial data migration: ',
+  customH:'Individual additional items (not covered by the standard):', daysParen:(d)=>' ('+d+' days)',
+  effortH:'Effort & terms (internal orientation, not necessarily to be included in the customer description):',
+  effortLine:(L)=>'- Development '+d1(L.dev)+' d, workshop '+d1(L.ws)+' d, test '+d1(L.ts)+' d, PM '+d1(L.pm)+' d, risk '+d1(L.rk)+' d',
+  totalLine:(L)=>'- Total effort: '+d1(L.total)+' days',
+  rateLine:(L)=>'- Day rate: '+L.rate.toLocaleString('en-CH')+' '+L.currency+(L.discount>0?(', discount '+L.discount+'%'):'')+', quote price '+Math.round(L.net).toLocaleString('en-CH')+' '+L.currency,
+  hintsH:'Points to consider for the scope definition:',
+  impFile:'IMPORTANT: The ERP side is connected file-based (XML/CSV). Check whether DataBridge is the more suitable approach here, and phrase the scope accordingly.',
+  impNone:'IMPORTANT: There is no public ERP endpoint. Feasibility must be clarified in advance with the customer or their ERP vendor; the description should name this as an open prerequisite.'
+}
+};
+function buildPrompt(){
+  const L=LAST; const P=PROMPT[LANG]; const lines=[];
+  lines.push(P.intro);
+  lines.push('');
+  lines.push(P.guide);
+  lines.push('');
+  lines.push(P.config);
+  lines.push('');
+  lines.push(P.context);
+  lines.push(P.erpSystem+L.erpSystem);
+  lines.push(P.erpExp+L.erp);
+  lines.push(P.conn+L.conn);
+  lines.push(P.auth+L.auth);
+  lines.push(P.erpDoc+L.erpDoc);
+  lines.push(P.soVariant+L.soVariant);
+  lines.push('');
+  lines.push(P.entities);
+  if(!L.entities||!L.entities.length){ lines.push(P.noEntity); }
+  else {
+    L.entities.forEach(e=>{
+      const trig = e.trig==='delta' ? P.trigDelta : P.trigWebhook;
+      let line='- '+e.name+(e.isSub?P.sub:'')+(e.erpName?(P.erpPref+e.erpName+')'):'')+': '+P.dirWord+e.dir+', ca. '+e.fields+P.fieldsWord+(e.udef?P.udefWord:'')+P.deliv+trig+P.matching+e.keyLabel;
+      const prep=[];
+      if(e.mapN) prep.push(e.mapN+P.mapW);
+      if(e.trN) prep.push(e.trN+P.trW);
+      if(e.ruN) prep.push(e.ruN+P.ruW);
+      if(prep.length) line+=P.prep+prep.join(', ');
+      if(e.bi) line+=P.biW;
+      if(e.riskLabels && e.riskLabels.length){
+        line+=P.cplx+e.riskLabels.map(r=>P.riskMap[r]||r).join(', ');
+      }
+      lines.push(line);
+    });
+  }
+  lines.push('');
+  const procLabels=[];
+  if(L.proc.onboard) procLabels.push(P.pOnboard);
+  if(L.proc.lock) procLabels.push(P.pLock);
+  if(L.proc.rights) procLabels.push(P.pRights);
+  if(L.proc.monitor) procLabels.push(P.pMonitor);
+  lines.push(P.proc);
+  if(procLabels.length){procLabels.forEach(p=>lines.push('- '+p));}else{lines.push(P.procNone);}
+  lines.push(P.del+L.deleteMode);
+  lines.push(P.mig+L.migrate);
+  lines.push('');
+  if(L.custom && L.custom.length){
+    lines.push(P.customH);
+    L.custom.forEach(c=>lines.push('- '+c.desc+(c.days?P.daysParen(d1(c.days)):'')));
+    lines.push('');
+  }
+  lines.push(P.effortH);
+  lines.push(P.effortLine(L));
+  lines.push(P.totalLine(L));
+  lines.push(P.rateLine(L));
+  lines.push('');
+  const relevant=(L.flags||[]).filter(f=>f.type==='warn'||f.type==='plum');
+  if(relevant.length){
+    lines.push(P.hintsH);
+    relevant.forEach(f=>lines.push('- '+f.txt));
+    lines.push('');
+  }
+  if(L.connFile){ lines.push(P.impFile); lines.push(''); }
+  if(L.connNone){ lines.push(P.impNone); lines.push(''); }
+  return lines.join('\n').trim();
+}
+function openPrompt(){ $('promptText').value=buildPrompt(); $('copyOk').classList.remove('show'); $('promptModal').classList.add('open'); }
+function closePrompt(){ $('promptModal').classList.remove('open'); }
+function copyPrompt(){
+  const ta=$('promptText'); ta.select();
+  const done=()=>{ $('copyOk').classList.add('show'); setTimeout(()=>$('copyOk').classList.remove('show'),2500); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(ta.value).then(done).catch(()=>{document.execCommand('copy');done();}); }
+  else { document.execCommand('copy'); done(); }
+}
+document.getElementById('promptModal').addEventListener('click',e=>{ if(e.target.id==='promptModal') closePrompt(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closePrompt(); });
+
+function applyI18n(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.getAttribute('data-i18n'); const v=t(k);
+    if(v!=null) el.innerHTML=v;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const k=el.getAttribute('data-i18n-ph'); const v=t(k);
+    if(v!=null) el.setAttribute('placeholder',v);
+  });
+  // Tooltips an statischen Labels (data-tip) neu bauen
+  document.querySelectorAll('label[data-tip]').forEach(el=>{
+    const k=el.getAttribute('data-tip'); const tp=T[LANG].tips[k]; if(!tp) return;
+    const right=el.classList.contains('tip-r-host');
+    let tipEl=el.querySelector('.tip');
+    const html='?<span class="tipbox"><b>'+tp.t+'</b><span class="ex">'+tp.e+'</span></span>';
+    if(!tipEl){ tipEl=document.createElement('span'); tipEl.className='tip'+(right?' tip-r':''); tipEl.tabIndex=0; el.appendChild(tipEl); }
+    tipEl.innerHTML=html;
+  });
+  // rateHint
+  const rh=document.getElementById('rateHint'); if(rh) rh.textContent=t('rateStd')+currency;
+}
+
+function setLang(lang){
+  if(lang===LANG) return;
+  // Werte der Entitäten sichern
+  const snap=snapshot();
+  const keepName=$('calcName').value;
+  LANG=lang;
+  document.querySelectorAll('.langswitch button').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+  applyI18n();
+  // Entitäten neu rendern (Sprache der Labels/Tooltips/Optionen)
+  document.querySelectorAll('#subtables .entity').forEach(el=>el.remove());
+  const entWrap2=document.getElementById('entities'); entWrap2.innerHTML='';
+  ENTITIES.forEach(e=>{
+    const d=document.createElement('div'); d.className='entity'; d.id='ent-'+e.key;
+    d.innerHTML=entityMarkup(e.key,e.name,false); entWrap2.appendChild(d);
+  });
+  document.querySelectorAll('#entities > .entity').forEach(wireEntity);
+  refreshSubEmpty();
+  // Zustand wiederherstellen (Zusatztabellen behalten ihren Freitext-Namen)
+  restore(snap);
+  $('calcName').value=keepName;
+  renderHistory();
+}
+
+calc();
+renderHistory();
+applyI18n();
+</script>
+</body>
+</html>
